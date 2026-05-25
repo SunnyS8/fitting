@@ -6,7 +6,7 @@
 
 **GitHub Repository:** [github.com/SamurAIGPT/ai-tryon](https://github.com/SamurAIGPT/ai-tryon)
 
-**Live Demo Preview:** [ai-tryon-stager.vercel.app](https://ai-tryon-stager.vercel.app/)
+**Live Demo Preview:** [ai-tryon-smoky.vercel.app](https://ai-tryon-smoky.vercel.app/)
 
 ---
 
@@ -61,7 +61,7 @@ This architecture is engineered explicitly for **Vercel** serverless environment
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/SamurAIGPT/ai-tryon)
 
-**Live App:** [ai-tryon-stager.vercel.app](https://ai-tryon-stager.vercel.app/)
+**Live App:** [ai-tryon-smoky.vercel.app](https://ai-tryon-smoky.vercel.app/)
 
 ### 🔑 Required Environment Variables
 
