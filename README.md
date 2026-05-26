@@ -1,6 +1,9 @@
-# 👕 TryOn AI — Premium AI Virtual Outfit Fitting & Dressing Room SaaS
+# 👕 TryOn AI — Open-Source AI Virtual Try-On & Outfit Fitting SaaS (Free Botika / Lalaland Alternative)
 
-> **A beautifully designed, high-contrast Virtual Dressing Studio.** Built with Next.js (App Router), this application is a self-contained SaaS boilerplate for trying on outfits virtually using state-of-the-art photorealistic AI. Upload a photo of a person, upload a garment photo, customize a fitting prompt, select an aspect ratio, and see the outfit fitted naturally on the person in seconds.
+> **Fit any garment onto any person photo in seconds with photorealistic AI.** A production-ready, self-hostable Next.js SaaS boilerplate built for fashion brands, e-commerce stores, stylists, and DTC apparel lines. Replaces $40–$100/mo paid try-on tools. A free open-source alternative to Botika, Lalaland.ai, ZMO.ai, WearView, and Vue.ai — powered by the MuAPI AI engine.
+
+**Tech stack:** Next.js 14 (App Router) · Prisma · PostgreSQL · NextAuth (Google OAuth) · Stripe · Tailwind CSS · MuAPI · Webhook-backed async delivery
+**Use cases:** Fashion e-commerce on-model photography · Virtual fitting rooms · Outfit visualization · Shopify clothing stores · Apparel marketing · Personal styling apps · Wardrobe planning · Streetwear product shots · Boutique catalog generation
 
 ## 🌐 Project Details
 
