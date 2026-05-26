@@ -135,7 +135,7 @@ The console should now be active on `http://localhost:3000`.
 
 ## ⚠️ Database Safety Warning (Shared Pool)
 
-The workspace database is shared with other applications. Running `npx prisma db push` on a clean, empty schema will drop tables belonging to other applications. Always follow the **Pull-Declare-Push-Cleanup** sequence detailed in the [SaaS Application Blueprint Guide](../blueprint.md):
+The workspace database is shared with other applications. Running `npx prisma db push` on a clean, empty schema will drop tables belonging to other applications. Always follow the **Pull-Declare-Push-Cleanup** sequence:
 
 1. Run `npx prisma db pull` to fetch all database tables.
 2. Declare your `TryOn` table and update the relations on the `User` model.
