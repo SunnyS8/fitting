@@ -5,7 +5,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { IoClose, IoMenu } from "react-icons/io5";
-import { FiLogOut, FiDollarSign, FiPlus, FiUser, FiCrown } from "react-icons/fi";
+import { FiLogOut, FiDollarSign, FiPlus, FiUser } from "react-icons/fi";
+import { FaCrown } from "react-icons/fa";
 import { SiVercel } from "react-icons/si";
 import config from "@/lib/config";
 
@@ -92,7 +93,7 @@ export default function Navbar() {
               {/* Subscription badge */}
               {isSubscribed && (
                 <div className="flex items-center h-9 border border-divider bg-emerald-950/20 px-3 text-[11px] font-bold text-emerald-400 gap-1">
-                  <FiCrown className="text-emerald-400 text-xs" />
+                  <FaCrown className="text-emerald-400 text-xs" />
                   <span>{subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}</span>
                 </div>
               )}
@@ -137,7 +138,7 @@ export default function Navbar() {
                     </div>
                     {isSubscribed && (
                       <div className="px-3 py-1.5 text-[10px] text-emerald-400 font-bold border-b border-divider/50 mb-1 flex items-center gap-1">
-                        <FiCrown size={12} /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
+                        <FaCrown className="text-xs" /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
                       </div>
                     )}
                     <button
@@ -200,7 +201,7 @@ export default function Navbar() {
 
             {isSubscribed && (
               <div className="flex items-center gap-2 py-1.5 text-xs font-bold text-emerald-400 px-1">
-                <FiCrown size={14} /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
+                <FaCrown className="text-sm" /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
               </div>
             )}
 
