@@ -9,66 +9,25 @@ const config = {
     url: process.env.NEXTAUTH_URL || "http://localhost:3000",
     webhook_url: process.env.WEBHOOK_URL || process.env.NEXTAUTH_URL || "http://localhost:3000",
   },
-  stripe: {
-    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    secretKey: process.env.STRIPE_SECRET_KEY,
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    // Одноразовые пакеты кредитов
+  yookassa: {
+    shopId: process.env.YOOKASSA_SHOP_ID,
+    secretKey: process.env.YOOKASSA_SECRET_KEY,
     plans: {
-      basic: {
-        id: "basic",
-        name: "Базовый",
-        credits: 75,
-        price: 500, // $5.00
-      },
-      standard: {
-        id: "standard",
-        name: "Стандарт",
-        credits: 300,
-        price: 1500, // $15.00
-      },
-      pro: {
-        id: "pro",
-        name: "Профессиональный",
-        credits: 875,
-        price: 3500, // $35.00
-      },
-      business: {
-        id: "business",
-        name: "Бизнес",
-        credits: 3000,
-        price: 9000, // $90.00
-      }
+      starter: { id: "starter", name: "Стартовый",  credits: 125, price: 199,  label: "199₽" },
+      basic:   { id: "basic",   name: "Базовый",    credits: 375, price: 499,  label: "499₽" },
+      standard:{ id: "standard",name: "Стандарт",   credits: 1000,price: 999,  label: "999₽" },
+      pro:     { id: "pro",     name: "Профи",      credits: 3750,price: 2499, label: "2499₽" },
     },
-    // Подписки (рекуррент) — создай Price IDs в Stripe Dashboard
     subscriptions: {
-      light: {
-        id: "light",
-        name: "Light",
-        creditsPerMonth: 150,
-        price: 1200, // $12/мес
-        priceId: process.env.STRIPE_PRICE_LIGHT || "price_your_light_id",
-      },
-      pro: {
-        id: "pro",
-        name: "Pro",
-        creditsPerMonth: 600,
-        price: 2900, // $29/мес
-        priceId: process.env.STRIPE_PRICE_PRO || "price_your_pro_id",
-      },
-      unlimited: {
-        id: "unlimited",
-        name: "Unlimited",
-        creditsPerMonth: 3000,
-        price: 7900, // $79/мес
-        priceId: process.env.STRIPE_PRICE_UNLIMITED || "price_your_unlimited_id",
-      },
+      light:     { id: "light",     name: "Light",     creditsPerMonth: 375,  price: 499,  label: "499₽/мес" },
+      pro:       { id: "pro",       name: "Pro",       creditsPerMonth: 1250, price: 999,  label: "999₽/мес" },
+      unlimited: { id: "unlimited", name: "Unlimited", creditsPerMonth: 5000, price: 2499, label: "2499₽/мес" },
     },
   },
   ai: {
     apiKey: process.env.MUAPIAPP_API_KEY || process.env.NEXT_PUBLIC_MUAPI_KEY,
-        generationCost: 25, // 25 кредитов за генерацию
-        freeTierCredits: 75, // 3 бесплатных примерки
+    generationCost: 25,
+    freeTierCredits: 125,
   },
   db: {
     url: process.env.DATABASE_URL,

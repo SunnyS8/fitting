@@ -1,92 +1,74 @@
-import { stripe } from "../stripe";
+import { yookassa } from "../yookassa";
 import config from "../config";
 import { UserService } from "./user";
 
 export const BillingService = {
-  // Одноразовая покупка кредитов
+  // Одноразовая покупка кредитов через ЮKassa
   async createCheckoutSession(userId, planId) {
-    const plan = config.stripe.plans[planId];
+    const plan = config.yookassa.plans[planId];
     if (!plan) throw new Error("Invalid plan selected");
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: `Пакет «${plan.name}»`,
-              description: `${plan.credits} кредитов для AI-примерок`,
-            },
-            unit_amount: plan.price,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${config.auth.url}/pricing?success=true`,
-      cancel_url: `${config.auth.url}/pricing?canceled=true`,
-      metadata: { userId, credits: plan.credits.toString(), type: "credits" },
+    const result = await yookassa.createPayment({
+      amount: plan.price,
+      description: `Пакет «${plan.name}» — ${plan.credits} кредитов`,
+      metadata: {
+        userId,
+        credits: plan.credits.toString(),
+        type: "credits",
+        planId,
+      },
     });
 
-    return session.url;
+    return result.confirmationUrl;
   },
 
-  // Подписка (рекуррент)
+  // Подписка через ЮKassa
   async createSubscriptionCheckoutSession(userId, subscriptionId) {
-    const plan = config.stripe.subscriptions[subscriptionId];
+    const plan = config.yookassa.subscriptions[subscriptionId];
     if (!plan) throw new Error("Invalid subscription plan selected");
-    if (!plan.priceId || plan.priceId.startsWith("price_your_")) {
-      throw new Error(
-        "Subscription not configured yet. Create a Price ID in Stripe Dashboard and set STRIPE_PRICE_<PLAN> env variable."
-      );
-    }
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: plan.priceId,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      success_url: `${config.auth.url}/pricing?subscription=success`,
-      cancel_url: `${config.auth.url}/pricing?canceled=true`,
-      metadata: { userId, plan: subscriptionId, type: "subscription" },
+    const result = await yookassa.createPayment({
+      amount: plan.price,
+      description: `Подписка «${plan.name}» — ${plan.creditsPerMonth} кредитов ежемесячно`,
+      metadata: {
+        userId,
+        plan: subscriptionId,
+        type: "subscription",
+        credits: plan.creditsPerMonth.toString(),
+        isRecurring: "true",
+      },
     });
 
-    return session.url;
+    return result.confirmationUrl;
   },
 
-  // Вебхук — обработка платежей Stripe
-  async handleWebhook(body, signature) {
-    const event = stripe.webhooks.constructEvent(body, signature, config.stripe.webhookSecret);
-    const session = event.data.object;
+  // Обработка вебхука от ЮKassa
+  async handleWebhook(body) {
+    const event = typeof body === "string" ? JSON.parse(body) : body;
 
-    switch (event.type) {
-      case "checkout.session.completed":
-        return await this._handleCheckoutCompleted(session);
-
-      case "invoice.paid":
-        return await this._handleInvoicePaid(session);
-
-      case "customer.subscription.updated":
-      case "customer.subscription.deleted":
-        return await this._handleSubscriptionChanged(session);
-
-      default:
-        return { success: false, handled: false };
+    if (event.event === "payment.succeeded") {
+      const payment = event.object;
+      return await this._handlePaymentSucceeded(payment);
     }
+
+    if (event.event === "payment.waiting_for_capture") {
+      const payment = event.object;
+      // Автоматически подтверждаем
+      await yookassa.capturePayment(payment.id);
+      return { success: true, status: "captured" };
+    }
+
+    return { success: false, handled: false };
   },
 
-  async _handleCheckoutCompleted(session) {
-    const type = session.metadata?.type;
+  async _handlePaymentSucceeded(payment) {
+    const { prisma } = await import("../prisma");
+    const meta = payment.metadata || {};
+    const type = meta.type;
 
     if (type === "credits") {
-      // Одноразовая покупка кредитов
-      const userId = session.metadata.userId;
-      const credits = parseInt(session.metadata.credits || "0", 10);
+      const userId = meta.userId;
+      const credits = parseInt(meta.credits || "0", 10);
       if (userId && credits > 0) {
         await UserService.addCredits(userId, credits);
         return { success: true, userId, credits };
@@ -94,86 +76,25 @@ export const BillingService = {
     }
 
     if (type === "subscription") {
-      // Новая подписка — кредиты начислятся через invoice.paid
-      const { userId, plan } = session.metadata;
-      if (userId && plan) {
-        // Сохраняем subscription ID
-        const subscriptionId = session.subscription;
-        const { prisma } = await import("../prisma");
+      const { userId, plan } = meta;
+      const credits = parseInt(meta.credits || "0", 10);
+      if (userId && plan && credits > 0) {
+        // Начисляем кредиты за первый месяц
+        await UserService.addCredits(userId, credits);
+        // Записываем статус подписки
         await prisma.user.update({
           where: { id: userId },
           data: {
-            subscriptionId,
+            subscriptionId: payment.id,
             subscriptionPlan: plan,
             subscriptionStatus: "active",
+            subscriptionPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 дней
           },
         });
-        return { success: true, userId, plan, subscriptionId };
+        return { success: true, userId, plan, credits };
       }
     }
 
     return { success: false };
-  },
-
-  async _handleInvoicePaid(invoice) {
-    if (invoice.billing_reason === "subscription_create") {
-      // Первый платёж по подписке — кредиты начислены не будут,
-      // т.к. checkout.session.completed уже обработал создание
-      return { success: true, note: "initial subscription payment" };
-    }
-
-    const subscriptionId = invoice.subscription;
-    if (!subscriptionId) return { success: false };
-
-    const { prisma } = await import("../prisma");
-    const user = await prisma.user.findFirst({
-      where: { subscriptionId },
-    });
-
-    if (!user) return { success: false };
-
-    // Начисляем ежемесячные кредиты
-    const plan = config.stripe.subscriptions[user.subscriptionPlan];
-    if (plan) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          credits: { increment: plan.creditsPerMonth },
-          subscriptionPeriodEnd: new Date(invoice.lines?.data?.[0]?.period?.end * 1000 || Date.now()),
-        },
-      });
-      return { success: true, userId: user.id, credits: plan.creditsPerMonth };
-    }
-
-    return { success: false };
-  },
-
-  async _handleSubscriptionChanged(subscription) {
-    const subscriptionId = subscription.id;
-    const status = subscription.status; // active, past_due, canceled, incomplete_expired
-
-    const { prisma } = await import("../prisma");
-    const user = await prisma.user.findFirst({
-      where: { subscriptionId },
-    });
-
-    if (!user) return { success: false };
-
-    const mappedStatus = status === "active" ? "active"
-      : status === "past_due" ? "past_due"
-      : status === "canceled" || status === "incomplete_expired" ? "canceled"
-      : "none";
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        subscriptionStatus: mappedStatus,
-        subscriptionPeriodEnd: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000)
-          : undefined,
-      },
-    });
-
-    return { success: true, userId: user.id, status: mappedStatus };
   },
 };
