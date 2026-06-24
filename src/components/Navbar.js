@@ -5,7 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { IoClose, IoMenu } from "react-icons/io5";
-import { FiMoon, FiSun, FiLogOut, FiDollarSign, FiPlus, FiUser } from "react-icons/fi";
+import { FiLogOut, FiDollarSign, FiPlus, FiUser, FiCrown } from "react-icons/fi";
 import { SiVercel } from "react-icons/si";
 import config from "@/lib/config";
 
@@ -18,10 +18,7 @@ export default function Navbar() {
   const appName = config?.appName || "AI SaaS";
   const logoLetter = appName.trim().charAt(0).toUpperCase();
 
-  // Eagerly prefetch workspace/gallery routes for fast tabs
-  useEffect(() => {
-    // Prefetch common routes
-  }, []);
+  useEffect(() => {}, []);
 
   const appMatch = pathname ? pathname.match(/^\/app\/([^\/]+)/) : null;
   const currentAppId = appMatch ? appMatch[1] : null;
@@ -38,11 +35,14 @@ export default function Navbar() {
         { name: "Тарифы", path: "/pricing" },
       ];
 
+  const isSubscribed = session?.user?.subscriptionStatus === "active";
+  const subPlan = session?.user?.subscriptionPlan;
+
   return (
     <header className="sticky top-0 z-50 w-full glass-panel border-b border-divider/50 shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         
-        {/* Logo and Brand Title (Visible at all times) */}
+        {/* Logo and Brand Title */}
         <Link href="/" className="flex items-center gap-2 transition-transform hover:scale-[1.02] active:scale-95">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white font-extrabold text-lg shadow-md shadow-primary/30">
             {logoLetter}
@@ -78,7 +78,7 @@ export default function Navbar() {
           
           {/* Vercel Deploy Button */}
           <a
-            href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSamurAIGPT%2Fcommon-saas-template"
+            href="https://vercel.com/new/clone?repository-url=https://github.com/SunnyS8/fitting"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full border border-divider px-4 py-1.5 text-xs font-bold text-secondary-text hover:text-primary-text hover:bg-bg-card transition-colors shadow-sm"
@@ -89,8 +89,16 @@ export default function Navbar() {
 
           {status === "authenticated" ? (
             <div className="flex items-center">
-              {/* Credit Balance indicator */}
-              <div className="flex items-center h-9 border border-divider rounded-l bg-bg-page/30 overflow-hidden pr-2">
+              {/* Subscription badge */}
+              {isSubscribed && (
+                <div className="flex items-center h-9 border border-divider bg-emerald-950/20 px-3 text-[11px] font-bold text-emerald-400 gap-1">
+                  <FiCrown className="text-emerald-400 text-xs" />
+                  <span>{subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}</span>
+                </div>
+              )}
+
+              {/* Credit Balance */}
+              <div className={`flex items-center h-9 border border-divider ${isSubscribed ? "" : "rounded-l"} bg-bg-page/30 overflow-hidden pr-2 ${isSubscribed ? "border-l-0" : ""}`}>
                 <span className="font-bold text-[13px] px-3 flex items-center text-primary-text gap-1">
                   <FiDollarSign className="text-emerald-500 text-xs" />
                   {session.user.credits !== undefined ? session.user.credits : 0}
@@ -103,7 +111,7 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              {/* Profile Menu Toggle */}
+              {/* Profile Menu */}
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -127,6 +135,11 @@ export default function Navbar() {
                     <div className="px-3 py-2 text-xs text-secondary-text border-b border-divider/50 mb-1 truncate">
                       {session.user.email}
                     </div>
+                    {isSubscribed && (
+                      <div className="px-3 py-1.5 text-[10px] text-emerald-400 font-bold border-b border-divider/50 mb-1 flex items-center gap-1">
+                        <FiCrown size={12} /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
+                      </div>
+                    )}
                     <button
                       onClick={() => signOut({ callbackUrl: "/login" })}
                       className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
@@ -148,7 +161,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Navbar Hamburger Menu Controls */}
+        {/* Mobile Hamburger */}
         <div className="flex md:hidden items-center gap-2">
           {status === "authenticated" && (
             <div className="flex items-center h-8 border border-divider rounded bg-bg-page/30 px-2.5 text-xs font-bold text-primary-text gap-0.5">
@@ -167,7 +180,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Absolutely Positioned Mobile Menu Dropdown (Backdrop blur + matches layout) */}
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-[200] glass-dropdown border-b border-divider shadow-2xl py-4 px-6 md:hidden animate-fade-in">
           <nav className="flex flex-col gap-3">
@@ -185,17 +198,22 @@ export default function Navbar() {
               </Link>
             ))}
 
+            {isSubscribed && (
+              <div className="flex items-center gap-2 py-1.5 text-xs font-bold text-emerald-400 px-1">
+                <FiCrown size={14} /> Подписка {subPlan === "unlimited" ? "Unlimited" : subPlan === "pro" ? "Pro" : "Light"}
+              </div>
+            )}
+
             <div className="h-px bg-divider/50 my-2" />
 
-            {/* Vercel Deploy in Mobile menu */}
             <a
-              href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSamurAIGPT%2Fcommon-saas-template"
+              href="https://vercel.com/new/clone?repository-url=https://github.com/SunnyS8/fitting"
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center gap-2 rounded-full border border-divider py-3 text-xs font-bold text-secondary-text hover:text-primary-text hover:bg-bg-card transition-all"
             >
               <SiVercel className="text-xs text-white" />
-              <span>Клонировать шаблон</span>
+              <span>На Vercel</span>
             </a>
 
             {status === "authenticated" ? (
@@ -207,15 +225,15 @@ export default function Navbar() {
                 className="flex w-full items-center justify-center gap-2 rounded bg-red-500/10 text-red-500 py-3 text-sm font-bold hover:bg-red-500/20 transition-all border border-red-500/20 mt-2"
               >
                 <FiLogOut size={16} />
-                                <span>Выйти</span>
-                              </button>
-                            ) : (
-                              <Link
-                                href="/login"
-                                onClick={() => setIsOpen(false)}
-                                className="flex w-full items-center justify-center rounded bg-primary text-white py-3 text-sm font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20 mt-2"
-                              >
-                                Войти
+                <span>Выйти</span>
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="flex w-full items-center justify-center rounded bg-primary text-white py-3 text-sm font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20 mt-2"
+              >
+                Войти
               </Link>
             )}
           </nav>

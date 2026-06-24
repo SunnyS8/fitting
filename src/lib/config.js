@@ -13,36 +13,62 @@ const config = {
     publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     secretKey: process.env.STRIPE_SECRET_KEY,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+    // Одноразовые пакеты кредитов
     plans: {
       basic: {
         id: "basic",
-        name: "Basic Pack",
-        credits: 1000,
+        name: "Базовый",
+        credits: 75,
         price: 500, // $5.00
       },
       standard: {
         id: "standard",
-        name: "Standard Pack",
-        credits: 2000,
-        price: 1000, // $10.00
+        name: "Стандарт",
+        credits: 300,
+        price: 1500, // $15.00
       },
       pro: {
         id: "pro",
-        name: "Professional Pack",
-        credits: 4000,
-        price: 2000, // $20.00
+        name: "Профессиональный",
+        credits: 875,
+        price: 3500, // $35.00
       },
       business: {
         id: "business",
-        name: "Business Pack",
-        credits: 10000,
-        price: 5000, // $50.00
+        name: "Бизнес",
+        credits: 3000,
+        price: 9000, // $90.00
       }
-    }
+    },
+    // Подписки (рекуррент) — создай Price IDs в Stripe Dashboard
+    subscriptions: {
+      light: {
+        id: "light",
+        name: "Light",
+        creditsPerMonth: 150,
+        price: 1200, // $12/мес
+        priceId: process.env.STRIPE_PRICE_LIGHT || "price_your_light_id",
+      },
+      pro: {
+        id: "pro",
+        name: "Pro",
+        creditsPerMonth: 600,
+        price: 2900, // $29/мес
+        priceId: process.env.STRIPE_PRICE_PRO || "price_your_pro_id",
+      },
+      unlimited: {
+        id: "unlimited",
+        name: "Unlimited",
+        creditsPerMonth: 3000,
+        price: 7900, // $79/мес
+        priceId: process.env.STRIPE_PRICE_UNLIMITED || "price_your_unlimited_id",
+      },
+    },
   },
   ai: {
-    apiKey: process.env.MUAPIAPP_API_KEY,
-    generationCost: 18, // 18 credits per Try-on generation
+    apiKey: process.env.MUAPIAPP_API_KEY || process.env.NEXT_PUBLIC_MUAPI_KEY,
+        generationCost: 25, // 25 кредитов за генерацию
+        freeTierCredits: 75, // 3 бесплатных примерки
   },
   db: {
     url: process.env.DATABASE_URL,

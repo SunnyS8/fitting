@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
+import { UserService } from "./services/user";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -11,10 +12,19 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      // Бесплатные кредиты при первом входе
+      if (user?.id) {
+        await UserService.giveFreeCreditsIfNeeded(user.id);
+      }
+      return true;
+    },
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
         session.user.credits = user.credits;
+        session.user.subscriptionStatus = user.subscriptionStatus;
+        session.user.subscriptionPlan = user.subscriptionPlan;
       }
       return session;
     },
