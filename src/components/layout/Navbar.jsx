@@ -8,8 +8,8 @@ import { SiVercel } from "react-icons/si";
 import clsx from "clsx";
 
 const navLinks = [
-  { name: "TryOn Studio", href: "/" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Студия", href: "/" },
+  { name: "Тарифы", href: "/pricing" },
 ];
 
 export function Navbar() {
@@ -18,7 +18,7 @@ export function Navbar() {
 
   const links = [...navLinks];
   if (session?.user) {
-    links.splice(1, 0, { name: "My try-ons", href: "/dashboard" });
+    links.splice(1, 0, { name: "Мои примерки", href: "/dashboard" });
   }
 
   return (
@@ -67,10 +67,10 @@ export function Navbar() {
           target="_blank"
           rel="noopener noreferrer"
           className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 hover:text-white border border-zinc-800 hover:border-zinc-700 rounded-lg transition-all cursor-pointer group"
-          title="Deploy your own to Vercel"
+          title="Развернуть на Vercel"
         >
           <SiVercel className="text-[10px] text-zinc-300 group-hover:text-white transition-colors" />
-          <span>Deploy</span>
+          <span>На Vercel</span>
         </a>
 
         {session?.user ? (
@@ -78,7 +78,7 @@ export function Navbar() {
             {/* Credits badge */}
             <span className="flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-950/30 border border-amber-800/40 px-3 py-1.5 rounded-full shadow-inner">
               <FaCoins className="text-amber-400 text-xs animate-pulse" />
-              <span>{session.user.credits ?? 0} Credits</span>
+              <span>{session.user.credits ?? 0} кредитов</span>
             </span>
 
             {/* User avatar */}
@@ -100,10 +100,10 @@ export function Navbar() {
             <button
               onClick={() => signOut()}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-zinc-500 hover:text-red-400 hover:bg-red-950/20 transition-all cursor-pointer"
-              title="Sign out"
+              title="Выйти"
             >
               <FaSignOutAlt className="text-xs" />
-              <span className="hidden md:inline">Sign out</span>
+              <span className="hidden md:inline">Выйти</span>
             </button>
           </>
         ) : (
@@ -113,7 +113,7 @@ export function Navbar() {
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 active:scale-[0.98] rounded-lg shadow-lg shadow-violet-500/20 transition-all cursor-pointer"
           >
             <FaGoogle className="text-[10px]" />
-            <span>Sign in</span>
+            <span>Войти</span>
           </button>
         )}
       </div>

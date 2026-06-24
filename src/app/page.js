@@ -9,15 +9,15 @@ import {
 import clsx from "clsx";
 
 const ASPECT_RATIOS = [
-  { id: "auto", name: "Auto Detect", desc: "Keep original dimensions" },
-  { id: "1:1", name: "1:1", desc: "Square (1024x1024)" },
-  { id: "9:16", name: "9:16", desc: "Story / Portrait" },
-  { id: "3:4", name: "3:4", desc: "Standard Portrait" },
-  { id: "4:3", name: "4:3", desc: "Landscape" },
-  { id: "16:9", name: "16:9", desc: "Widescreen" },
+  { id: "auto", name: "Авто", desc: "Исходные пропорции" },
+  { id: "1:1", name: "1:1", desc: "Квадрат (1024x1024)" },
+  { id: "9:16", name: "9:16", desc: "История / Портрет" },
+  { id: "3:4", name: "3:4", desc: "Стандартный портрет" },
+  { id: "4:3", name: "4:3", desc: "Пейзаж" },
+  { id: "16:9", name: "16:9", desc: "Широкий экран" },
 ];
 
-const DEFAULT_PROMPT = "Generate a photorealistic virtual try-on where the person is wearing the clothes in the provided clothes photo. Keep the person's face, body structure, pose, skin tone, hair, and facial features identical. The garment from the clothes image should fit naturally on the person's body with matching lighting, folds, shadows, draping, and high resolution details.";
+const DEFAULT_PROMPT = "Создай фотореалистичную виртуальную примерку: человек одет в одежду с предоставленного фото одежды. Сохрани лицо, телосложение, позу, тон кожи, волосы и черты лица без изменений. Одежда должна сидеть естественно, с соответствующим освещением, складками, тенями и драпировкой, в высоком разрешении.";
 
 export default function StudioPage() {
   const { data: session, update: updateSession } = useSession();
@@ -126,7 +126,7 @@ export default function StudioPage() {
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to upload image. Please try again.");
+      alert("Не удалось загрузить изображение. Попробуйте снова.");
     } finally {
       if (type === "person") setIsUploadingPerson(false);
       else setIsUploadingClothes(false);
@@ -140,7 +140,7 @@ export default function StudioPage() {
     }
 
     if (!personImage || !clothesImage) {
-      setGeneratingError("Please upload both a person image and an outfit image.");
+      setGeneratingError("Загрузите фото человека и фото одежды.");
       setGeneratingStatus("error");
       return;
     }
@@ -162,7 +162,7 @@ export default function StudioPage() {
       });
 
       if (res.status === 402) {
-        setGeneratingError("Insufficient credits. Please purchase a credit pack on the pricing page.");
+        setGeneratingError("Недостаточно кредитов. Пополните баланс на странице тарифов.");
         setGeneratingStatus("error");
         return;
       }
@@ -185,7 +185,7 @@ export default function StudioPage() {
       }
     } catch (err) {
       console.error(err);
-      setGeneratingError("An error occurred during generation. Please try again.");
+      setGeneratingError("Произошла ошибка при генерации. Попробуйте снова.");
       setGeneratingStatus("error");
     }
   };
@@ -209,7 +209,7 @@ export default function StudioPage() {
             setGeneratingStatus("success");
             completed = true;
           } else if (data.status === "failed") {
-            setGeneratingError("AI outfit fitting failed. Please review your images and try again.");
+            setGeneratingError("AI не удалось выполнить примерку. Проверьте фото и попробуйте снова.");
             setGeneratingStatus("error");
             completed = true;
           }
@@ -220,7 +220,7 @@ export default function StudioPage() {
     }
 
     if (!completed) {
-      setGeneratingError("Generation is taking longer than expected. It will complete in the background and show in your gallery.");
+      setGeneratingError("Генерация занимает больше времени. Она завершится в фоне и появится в галерее.");
       setGeneratingStatus("error");
     }
   };
@@ -249,9 +249,9 @@ export default function StudioPage() {
       <div className="w-full md:w-[420px] border-r border-zinc-700 bg-zinc-900/60 flex flex-col md:overflow-y-auto overflow-visible flex-shrink-0">
         <div className="p-5 border-b border-zinc-700 flex-shrink-0 bg-zinc-900/80">
           <h1 className="text-lg font-heading font-extrabold text-white tracking-tight flex items-center gap-2">
-            <FaTshirt className="text-violet-400" /> Virtual Outfit Studio
+            <FaTshirt className="text-violet-400" /> Виртуальная примерочная
           </h1>
-          <p className="text-xs text-zinc-200 mt-1.5 font-medium">Upload photos, customize AI prompts, and dress virtually in seconds.</p>
+          <p className="text-xs text-zinc-200 mt-1.5 font-medium">Загрузите фото, настройте промпт и примерите одежду за секунды с помощью AI.</p>
         </div>
 
         <div className="p-5 space-y-6 flex-1 bg-zinc-900/30">
@@ -260,20 +260,20 @@ export default function StudioPage() {
             {/* Person upload */}
             <div className="w-full">
               <label className="block text-[11px] font-black text-zinc-200 uppercase tracking-wider mb-2">
-                1. Person Image
+                1. Фото человека
               </label>
               <div className="relative group border border-dashed border-zinc-600 rounded overflow-hidden bg-zinc-950 hover:border-violet-400 transition-all duration-200">
                 {personImage ? (
                   <div className="relative aspect-[4/3] w-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={personImage} alt="Person Upload" className="w-full h-full object-cover" />
+                    <img src={personImage} alt="Фото человека" className="w-full h-full object-cover" />
                     <button
                       onClick={() => {
                         setPersonImage("");
                         setResultImage("");
                       }}
                       className="absolute top-2 right-2 p-1.5 rounded-full bg-zinc-900/90 hover:bg-zinc-800 hover:text-red-400 border border-zinc-700 cursor-pointer"
-                      title="Clear photo"
+                      title="Очистить"
                     >
                       <FaTimes className="text-[10px]" />
                     </button>
@@ -286,9 +286,9 @@ export default function StudioPage() {
                       <FaUpload className="text-zinc-400 mb-2 group-hover:text-violet-400 transition-colors" />
                     )}
                     <span className="text-xs font-bold text-zinc-200 group-hover:text-white">
-                      {isUploadingPerson ? "Uploading..." : "Click or drop photo"}
+                      {isUploadingPerson ? "Загрузка..." : "Нажмите или перетащите фото"}
                     </span>
-                    <span className="text-[9px] text-zinc-400 font-bold mt-1">PNG, JPG up to 10MB</span>
+                    <span className="text-[9px] text-zinc-400 font-bold mt-1">PNG, JPG до 10MB</span>
                     <input type="file" accept="image/*" onChange={(e) => handleUpload(e, "person")} className="hidden" />
                   </label>
                 )}
@@ -298,20 +298,20 @@ export default function StudioPage() {
             {/* Clothes upload */}
             <div className="w-full">
               <label className="block text-[11px] font-black text-zinc-200 uppercase tracking-wider mb-2">
-                2. Outfit Image
+                2. Фото одежды
               </label>
               <div className="relative group border border-dashed border-zinc-600 rounded overflow-hidden bg-zinc-950 hover:border-fuchsia-400 transition-all duration-200">
                 {clothesImage ? (
                   <div className="relative aspect-[4/3] w-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={clothesImage} alt="Clothes Upload" className="w-full h-full object-cover" />
+                    <img src={clothesImage} alt="Фото одежды" className="w-full h-full object-cover" />
                     <button
                       onClick={() => {
                         setClothesImage("");
                         setResultImage("");
                       }}
                       className="absolute top-2 right-2 p-1.5 rounded-full bg-zinc-900/90 hover:bg-zinc-800 hover:text-red-400 border border-zinc-700 cursor-pointer"
-                      title="Clear photo"
+                      title="Очистить"
                     >
                       <FaTimes className="text-[10px]" />
                     </button>
@@ -324,9 +324,9 @@ export default function StudioPage() {
                       <FaUpload className="text-zinc-400 mb-2 group-hover:text-fuchsia-400 transition-colors" />
                     )}
                     <span className="text-xs font-bold text-zinc-200 group-hover:text-white">
-                      {isUploadingClothes ? "Uploading..." : "Click or drop photo"}
+                      {isUploadingClothes ? "Загрузка..." : "Нажмите или перетащите фото"}
                     </span>
-                    <span className="text-[9px] text-zinc-400 font-bold mt-1">PNG, JPG up to 10MB</span>
+                    <span className="text-[9px] text-zinc-400 font-bold mt-1">PNG, JPG до 10MB</span>
                     <input type="file" accept="image/*" onChange={(e) => handleUpload(e, "clothes")} className="hidden" />
                   </label>
                 )}
@@ -337,7 +337,7 @@ export default function StudioPage() {
           {/* 2. Custom Aspect Ratio Dropdown */}
           <div ref={dropdownRef}>
             <label className="block text-[11px] font-black text-zinc-200 uppercase tracking-wider mb-2.5">
-              3. Output Aspect Ratio
+              3. Соотношение сторон
             </label>
             <div className="relative">
               <button
@@ -387,14 +387,14 @@ export default function StudioPage() {
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-[11px] font-black text-zinc-200 uppercase tracking-wider">
-                4. AI Fitting Prompt (Editable)
+                4. Промпт для AI
               </label>
               <button
                 onClick={() => setPrompt(DEFAULT_PROMPT)}
                 className="text-[9px] font-black text-violet-400 hover:text-violet-300 cursor-pointer"
                 type="button"
               >
-                Reset Default
+                Сбросить
               </button>
             </div>
             <textarea
@@ -402,7 +402,7 @@ export default function StudioPage() {
               onChange={(e) => setPrompt(e.target.value)}
               rows={4}
               className="w-full bg-zinc-950 border border-zinc-700 rounded px-3 py-2.5 text-xs font-medium text-white placeholder-zinc-550 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/85 resize-none transition-all leading-normal"
-              placeholder="Instructions describing try-on details..."
+              placeholder="Опишите детали примерки..."
             />
           </div>
         </div>
@@ -417,19 +417,19 @@ export default function StudioPage() {
             {generatingStatus === "generating" ? (
               <>
                 <FaSpinner className="animate-spin text-xs text-white" />
-                <span>Creating Outfit... ({elapsedSeconds}s)</span>
+                <span>Создание... ({elapsedSeconds}s)</span>
               </>
             ) : (
               <>
                 <FaMagic className="text-xs text-white animate-pulse" />
-                <span>{session?.user ? "Generate Try-On" : "Sign in to Try-On"}</span>
+                <span>{session?.user ? "Создать примерку" : "Войдите, чтобы создать"}</span>
               </>
             )}
           </button>
           <div className="flex items-center justify-between text-[9px] font-black text-zinc-300 px-1">
-            <span>Cost: 18 Credits</span>
+            <span>Стоимость: 18 кредитов</span>
             <span className="flex items-center gap-1 text-amber-300 bg-amber-955/20 border border-amber-800/40 rounded px-2 py-0.5 font-bold">
-              <FaCoins /> Deducts balance live
+              <FaCoins /> Списание в реальном времени
             </span>
           </div>
 
@@ -447,15 +447,15 @@ export default function StudioPage() {
         {/* Preview Toolbar */}
         <div className="px-5 py-3.5 bg-zinc-900/40 border-b border-zinc-700 flex items-center justify-between gap-3 flex-shrink-0">
           <div className="min-w-0">
-            <h2 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-none">Virtual Outfit Fitting Output</h2>
-            <p className="text-[10px] text-zinc-300 mt-1 font-medium">Review the generated dress outcome fitting results</p>
+            <h2 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-none">Результат примерки</h2>
+            <p className="text-[10px] text-zinc-300 mt-1 font-medium">Просмотр готового результата виртуальной примерки</p>
           </div>
           {resultImage && (
             <button
               onClick={handleDownload}
               className="flex items-center gap-1.5 text-xs font-bold text-white bg-zinc-900 border border-zinc-700 px-3.5 py-2 rounded hover:bg-zinc-800 hover:border-zinc-500 transition-all cursor-pointer"
             >
-              <FaDownload className="text-[10px]" /> Download Image
+              <FaDownload className="text-[10px]" /> Скачать
             </button>
           )}
         </div>
@@ -469,22 +469,22 @@ export default function StudioPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resultImage}
-                  alt="TryOn Outfit Result"
+                  alt="Результат примерки"
                   className="w-full h-full object-cover"
                 />
 
                 {/* Floating Inputs Badge for visual reference */}
                 {personImage && clothesImage && (
                   <div className="absolute bottom-4 right-4 bg-zinc-900 border border-zinc-700/80 p-2.5 rounded flex flex-col gap-1.5 z-20 shadow-xl max-w-[130px]">
-                    <div className="text-[8px] font-bold text-zinc-300 uppercase tracking-wider">Input Photos</div>
+                    <div className="text-[8px] font-bold text-zinc-300 uppercase tracking-wider">Исходные фото</div>
                     <div className="flex gap-1.5">
                       <div className="h-10 w-8 rounded overflow-hidden border border-zinc-700 bg-zinc-950">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={personImage} alt="Person Input" className="w-full h-full object-cover" />
+                        <img src={personImage} alt="Фото человека" className="w-full h-full object-cover" />
                       </div>
                       <div className="h-10 w-8 rounded overflow-hidden border border-zinc-700 bg-zinc-950">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={clothesImage} alt="Clothes Input" className="w-full h-full object-cover" />
+                        <img src={clothesImage} alt="Фото одежды" className="w-full h-full object-cover" />
                       </div>
                     </div>
                   </div>
@@ -496,9 +496,9 @@ export default function StudioPage() {
                   <div className="h-16 w-16 rounded-full border-2 border-dashed border-violet-500 animate-spin" />
                   <FaTshirt className="absolute text-xl text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400 animate-bounce" />
                 </div>
-                <p className="text-sm font-heading font-black text-white">Fitting outfit to person...</p>
+                <p className="text-sm font-heading font-black text-white">Подгонка одежды...</p>
                 <p className="text-xs text-zinc-300 mt-2.5 max-w-xs leading-relaxed font-medium">
-                  MuAPI's image-to-image agent is blending the garment fibers and shadows onto the body silhouette. Estimated time: 10-15s...
+                  AI-агент обрабатывает изображение: накладывает текстуру одежды, подгоняет тени и складки. Примерное время: 10–15 секунд.
                 </p>
               </div>
             ) : (
@@ -506,34 +506,34 @@ export default function StudioPage() {
                 <div className="flex flex-col md:flex-row items-center justify-center gap-6 p-6 w-full h-full max-h-[70vh]">
                   {personImage && (
                     <div className="flex flex-col items-center gap-2 max-w-[200px] w-full">
-                      <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Person (You)</div>
+                      <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Вы</div>
                       <div className="aspect-[4/5] w-full rounded overflow-hidden border border-zinc-700 bg-zinc-900 shadow">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={personImage} alt="Person Preview" className="w-full h-full object-cover" />
+                        <img src={personImage} alt="Превью человека" className="w-full h-full object-cover" />
                       </div>
                     </div>
                   )}
                   {clothesImage && (
                     <div className="flex flex-col items-center gap-2 max-w-[200px] w-full">
-                      <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Garment (Outfit)</div>
+                      <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Одежда</div>
                       <div className="aspect-[4/5] w-full rounded overflow-hidden border border-zinc-700 bg-zinc-900 shadow">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={clothesImage} alt="Clothes Preview" className="w-full h-full object-cover" />
+                        <img src={clothesImage} alt="Превью одежды" className="w-full h-full object-cover" />
                       </div>
                     </div>
                   )}
                   {(!personImage || !clothesImage) && (
                     <div className="flex flex-col justify-center text-center p-4">
                       <p className="text-xs text-zinc-300 mt-1.5 max-w-[150px] leading-relaxed font-bold">
-                        {!personImage ? "Upload a portrait photo to complete pair." : "Upload a garment photo to complete pair."}
+                        {!personImage ? "Загрузите фото человека" : "Загрузите фото одежды"}
                       </p>
                     </div>
                   )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center text-center p-8 bg-zinc-950 text-zinc-300">
-                  <p className="text-sm font-bold text-white">No photos loaded</p>
-                  <p className="text-xs text-zinc-300 mt-1.5 font-medium">Upload portrait and garment photos in the left panel to begin</p>
+                  <p className="text-sm font-bold text-white">Фото не загружены</p>
+                  <p className="text-xs text-zinc-300 mt-1.5 font-medium">Загрузите фото человека и одежды в левой панели, чтобы начать</p>
                 </div>
               )
             )}
@@ -542,7 +542,7 @@ export default function StudioPage() {
             {resultImage && (
               <div className="absolute top-4 left-4 bg-zinc-950 border border-zinc-700 text-violet-400 text-[9px] font-black px-2.5 py-1 rounded z-20 shadow-md flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping" />
-                <span>Try-On Result</span>
+                <span>Результат</span>
               </div>
             )}
           </div>

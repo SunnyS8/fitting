@@ -1,5 +1,5 @@
 const config = {
-  appName: "Ai Tryon",
+  appName: "AI Примерка",
   auth: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,

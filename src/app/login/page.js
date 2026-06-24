@@ -24,10 +24,10 @@ function LoginContent() {
           <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl text-primary font-black shadow-md shadow-primary/15">
             A
           </div>
-          <h2 className="text-2xl font-black uppercase tracking-tight">Sign In to Studio</h2>
-          <p className="text-xs font-semibold text-secondary-text leading-relaxed px-4">
-            Sign in with Google to enable predictions, save generation history, and top up credits packages.
-          </p>
+          <h2 className="text-2xl font-black uppercase tracking-tight">Вход в студию</h2>
+                    <p className="text-xs font-semibold text-secondary-text leading-relaxed px-4">
+                      Войдите через Google, чтобы создавать примерки, сохранять историю и пополнять баланс кредитов.
+                    </p>
         </div>
 
         <div className="space-y-4">
@@ -36,15 +36,15 @@ function LoginContent() {
             className="w-full py-3.5 bg-white text-neutral-900 rounded-full text-xs font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-md active:scale-[0.98] cursor-pointer"
           >
             <FaGoogle className="text-sm text-red-500" />
-            <span>Continue with Google</span>
+            <span>Продолжить с Google</span>
           </button>
         </div>
 
         <div className="flex items-start gap-2.5 bg-primary/5 border border-primary/10 p-3.5 rounded text-[11px] leading-relaxed text-secondary-text">
           <FaInfoCircle className="text-primary text-xs shrink-0 mt-0.5" />
           <span>
-            By signing in, you agree to our Terms of Service. Purchases are stripe-secured and credit balance addition is automated.
-          </span>
+                      Входя в аккаунт, вы соглашаетесь с нашими Условиями использования. Все платежи защищены Stripe, кредиты начисляются автоматически.
+                    </span>
         </div>
       </div>
     </div>

@@ -28,14 +28,14 @@ export default function Navbar() {
 
   const navLinks = currentAppId
     ? [
-        { name: "Workspace", path: `/app/${currentAppId}` },
-        { name: "Gallery", path: `/app/${currentAppId}/gallery` },
-        { name: "Pricing", path: `/app/${currentAppId}/pricing` },
+        { name: "Студия", path: `/app/${currentAppId}` },
+        { name: "Галерея", path: `/app/${currentAppId}/gallery` },
+        { name: "Тарифы", path: `/app/${currentAppId}/pricing` },
       ]
     : [
-        { name: "Workspace", path: "/" },
-        { name: "Gallery", path: "/gallery" },
-        { name: "Pricing", path: "/pricing" },
+        { name: "Студия", path: "/" },
+        { name: "Галерея", path: "/gallery" },
+        { name: "Тарифы", path: "/pricing" },
       ];
 
   return (
@@ -84,7 +84,7 @@ export default function Navbar() {
             className="flex items-center gap-2 rounded-full border border-divider px-4 py-1.5 text-xs font-bold text-secondary-text hover:text-primary-text hover:bg-bg-card transition-colors shadow-sm"
           >
             <SiVercel className="text-xs text-white" />
-            <span>Deploy</span>
+            <span>На Vercel</span>
           </a>
 
           {status === "authenticated" ? (
@@ -132,7 +132,7 @@ export default function Navbar() {
                       className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
                     >
                       <FiLogOut size={14} />
-                      <span>Sign Out</span>
+                      <span>Выйти</span>
                     </button>
                   </div>
                 )}
@@ -143,7 +143,7 @@ export default function Navbar() {
               href="/login"
               className="bg-primary text-white px-5 py-1.5 rounded-full text-sm font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20"
             >
-              Sign In
+              Войти
             </Link>
           )}
         </div>
@@ -160,7 +160,7 @@ export default function Navbar() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="hover:bg-bg-card p-2 rounded cursor-pointer transition-colors text-primary-text border border-divider/50"
-            aria-label="Toggle Menu"
+            aria-label="Меню"
           >
             {isOpen ? <IoClose size={20} /> : <IoMenu size={20} />}
           </button>
@@ -171,7 +171,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="absolute top-full left-0 right-0 z-[200] glass-dropdown border-b border-divider shadow-2xl py-4 px-6 md:hidden animate-fade-in">
           <nav className="flex flex-col gap-3">
-            <span className="text-[10px] uppercase font-bold text-secondary-text tracking-widest mb-1">Navigation</span>
+            <span className="text-[10px] uppercase font-bold text-secondary-text tracking-widest mb-1">Навигация</span>
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -195,7 +195,7 @@ export default function Navbar() {
               className="flex w-full items-center justify-center gap-2 rounded-full border border-divider py-3 text-xs font-bold text-secondary-text hover:text-primary-text hover:bg-bg-card transition-all"
             >
               <SiVercel className="text-xs text-white" />
-              <span>Clone & Deploy Template</span>
+              <span>Клонировать шаблон</span>
             </a>
 
             {status === "authenticated" ? (
@@ -207,15 +207,15 @@ export default function Navbar() {
                 className="flex w-full items-center justify-center gap-2 rounded bg-red-500/10 text-red-500 py-3 text-sm font-bold hover:bg-red-500/20 transition-all border border-red-500/20 mt-2"
               >
                 <FiLogOut size={16} />
-                <span>Sign Out</span>
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex w-full items-center justify-center rounded bg-primary text-white py-3 text-sm font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20 mt-2"
-              >
-                Sign In
+                                <span>Выйти</span>
+                              </button>
+                            ) : (
+                              <Link
+                                href="/login"
+                                onClick={() => setIsOpen(false)}
+                                className="flex w-full items-center justify-center rounded bg-primary text-white py-3 text-sm font-bold hover:bg-primary-hover transition-all shadow-md shadow-primary/20 mt-2"
+                              >
+                                Войти
               </Link>
             )}
           </nav>

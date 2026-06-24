@@ -15,8 +15,8 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "TryOn AI - Virtual Outfit Try-On Studio",
-  description: "Upload a photo of yourself and a photo of any outfit, and virtually try it on instantly using advanced photorealistic AI.",
+  title: "TryOn AI — виртуальная примерка одежды",
+  description: "Загрузите своё фото и фото любой одежды — AI мгновенно примерит её на вас с фотореалистичным результатом.",
 };
 
 export default function RootLayout({ children }) {
