@@ -1,17 +1,12 @@
-import { Inter, Outfit } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "../components/Navbar";
-import config from "@/lib/config";
 
-const inter = Inter({
-  variable: "--font-inter",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata = {
@@ -20,11 +15,9 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  const theme = config?.theme || "slate-indigo";
-
   return (
-    <html lang="en" className="h-full w-full" data-theme={theme}>
-      <body className={`${inter.variable} ${outfit.variable} h-full w-full flex flex-col antialiased bg-bg-page text-primary-text font-sans overflow-hidden`}>
+    <html lang="ru" className="h-full w-full" data-theme="pastel">
+      <body className={`${nunito.variable} h-full w-full flex flex-col antialiased bg-bg-page text-primary-text font-sans overflow-hidden`}>
         <Providers>
           <Navbar />
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
@@ -35,4 +28,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-

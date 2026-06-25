@@ -6,10 +6,10 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full border-t border-divider/40 bg-bg-page py-6 text-center text-xs text-secondary-text mt-auto">
+    <footer className="w-full border-t border-divider/40 bg-bg-card/30 py-6 text-center text-xs text-secondary-text mt-auto">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          &copy; {currentYear} AI Tryon Studio. Все права защищены.
+          &copy; {currentYear} AI Примерка. Все права защищены.
         </div>
         <div className="flex gap-4">
           <Link href="/terms" className="hover:text-primary-text transition-colors">

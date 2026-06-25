@@ -1,22 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), sans-serif;
-  --font-outfit: var(--font-inter), sans-serif;
-  
-  --color-bg-page: var(--bg-page, #09090b);
-  --color-bg-card: var(--bg-card, #18181b);
-  --color-bg-card-hover: var(--bg-card-hover, #27272a);
-  --color-bg-elevated: var(--bg-elevated, #202024);
-  --color-divider: var(--divider, #3f3f46);
-  --color-primary: var(--primary, #8b5cf6);
-  --color-primary-hover: var(--primary-hover, #7c3aed);
-  --color-primary-text: var(--primary-text, #f4f4f5);
-  --color-secondary-text: var(--secondary-text, #a1a1aa);
+  --font-sans: var(--font-nunito), sans-serif;
+  --font-outfit: var(--font-nunito), sans-serif;
+
+  /* Пастельная тема (по умолчанию) */
+  --color-bg-page: var(--bg-page, #fef9f7);
+  --color-bg-card: var(--bg-card, #fff5f0);
+  --color-bg-card-hover: var(--bg-card-hover, #fde8e0);
+  --color-bg-elevated: var(--bg-elevated, #fffaf5);
+  --color-divider: var(--divider, #fbd5d0);
+  --color-primary: var(--primary, #f472b6);
+  --color-primary-hover: var(--primary-hover, #ec4899);
+  --color-primary-text: var(--primary-text, #3b1f2e);
+  --color-secondary-text: var(--secondary-text, #9c7a8f);
   --color-primary-btn-text: var(--primary-btn-text, #ffffff);
 }
 
-/* Premium Visual Themes Override Definitions */
+/* Темы */
+[data-theme="pastel"] {
+  --bg-page: #fef9f7;
+  --bg-card: #fff5f0;
+  --bg-card-hover: #fde8e0;
+  --bg-elevated: #fffaf5;
+  --divider: #fbd5d0;
+  --primary: #f472b6;
+  --primary-hover: #ec4899;
+  --primary-text: #3b1f2e;
+  --secondary-text: #9c7a8f;
+  --primary-btn-text: #ffffff;
+}
+
+[data-theme="pastel-cool"] {
+  --bg-page: #f5f3ff;
+  --bg-card: #f8f7ff;
+  --bg-card-hover: #ede9fe;
+  --bg-elevated: #fcfaff;
+  --divider: #ddd6fe;
+  --primary: #a78bfa;
+  --primary-hover: #8b5cf6;
+  --primary-text: #2e1b3b;
+  --secondary-text: #8b7e9c;
+  --primary-btn-text: #ffffff;
+}
+
+[data-theme="pastel-mint"] {
+  --bg-page: #f0fdf6;
+  --bg-card: #f5fdf9;
+  --bg-card-hover: #d1fae5;
+  --bg-elevated: #f8fffc;
+  --divider: #a7f3d0;
+  --primary: #34d399;
+  --primary-hover: #10b981;
+  --primary-text: #1b2e24;
+  --secondary-text: #6b9c84;
+  --primary-btn-text: #ffffff;
+}
+
 [data-theme="cyberpunk"] {
   --bg-page: #05010a;
   --bg-card: #0e051c;
@@ -69,10 +109,6 @@
   --primary-btn-text: #000000;
 }
 
-.bg-primary {
-  color: var(--primary-btn-text, #ffffff) !important;
-}
-
 @layer base {
   html, body {
     background-color: var(--color-bg-page);
@@ -84,19 +120,32 @@
   }
 }
 
-/* Glassmorphism Utilities */
+/* Glassmorphism — адаптирован под светлую тему */
 .glass-panel {
-  background: rgba(24, 24, 27, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(63, 63, 70, 0.5);
+  background: rgba(255, 245, 240, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(251, 213, 208, 0.5);
 }
 
 .glass-dropdown {
-  background: rgba(15, 15, 18, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(63, 63, 70, 0.6);
+  background: rgba(255, 250, 245, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(251, 213, 208, 0.6);
+}
+
+/* Пастельные тени */
+.pastel-shadow-sm {
+  box-shadow: 0 1px 3px rgba(244, 114, 182, 0.08), 0 1px 2px rgba(244, 114, 182, 0.06);
+}
+
+.pastel-shadow-md {
+  box-shadow: 0 4px 14px rgba(244, 114, 182, 0.1), 0 2px 6px rgba(244, 114, 182, 0.06);
+}
+
+.pastel-shadow-lg {
+  box-shadow: 0 10px 30px rgba(244, 114, 182, 0.12), 0 4px 12px rgba(244, 114, 182, 0.08);
 }
 
 /* Premium Scrollbars */
@@ -145,4 +194,17 @@
 
 .animate-gradient-x {
   animation: gradientX 6s ease infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
