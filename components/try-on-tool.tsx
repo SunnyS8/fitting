@@ -104,6 +104,24 @@ export function TryOnTool() {
         return
       }
       if (!res.ok) throw new Error(data.error || "Ошибка обработки")
+
+      if (data.status === "processing" && data.tryonId) {
+        const id = data.tryonId
+        while (true) {
+          await new Promise((r) => setTimeout(r, 3000))
+          const pollRes = await fetch(`/api/tryons?id=${id}`)
+          if (!pollRes.ok) break
+          const pollData = await pollRes.json()
+          if (pollData.status === "completed") {
+            setResult(pollData.resultImage)
+            setLoading(false)
+            return
+          }
+          if (pollData.status === "failed") break
+        }
+        throw new Error("Обработка не завершилась вовремя")
+      }
+
       setResult(data.image)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось выполнить примерку.")

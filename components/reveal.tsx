@@ -20,8 +20,8 @@ export function Reveal({ children, className, delay = 0, as: Tag = "div" }: Reve
     if (!el) return
 
     if (typeof IntersectionObserver === "undefined") {
-      setVisible(true)
-      return
+      const id = setTimeout(() => setVisible(true), 0)
+      return () => clearTimeout(id)
     }
 
     const observer = new IntersectionObserver(

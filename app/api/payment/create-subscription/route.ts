@@ -1,0 +1,25 @@
+import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { BillingService } from "@/lib/services/billing"
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Не авторизован" }, { status: 401 })
+    }
+
+    const { planId } = (await req.json()) as { planId?: string }
+    if (!planId) {
+      return NextResponse.json({ error: "planId обязателен" }, { status: 400 })
+    }
+
+    const url = await BillingService.createSubscriptionCheckoutSession(session.user.id, planId)
+    return NextResponse.json({ url })
+  } catch (error) {
+    console.error("[SUBSCRIBE_CREATE]", error)
+    const message = error instanceof Error ? error.message : "Subscription error"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

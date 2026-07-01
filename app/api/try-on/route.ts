@@ -73,49 +73,6 @@ export async function POST(req: Request) {
           const resJson = await submitRes.json()
           if (resJson.request_id) {
             requestId = resJson.request_id
-
-            let completed = false
-            let attempts = 0
-            const maxAttempts = 12
-
-            while (!completed && attempts < maxAttempts) {
-              await new Promise((resolve) => setTimeout(resolve, 2500))
-              attempts++
-
-              try {
-                const pollRes = await fetch(
-                  `https://api.muapi.ai/api/v1/predictions/${requestId}/result`,
-                  {
-                    method: "GET",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "x-api-key": apiKey,
-                    },
-                  },
-                )
-
-                if (pollRes.ok) {
-                  const pollJson = await pollRes.json()
-                  const state = pollJson.status || pollJson.state
-                  if (state === "completed" || state === "succeeded") {
-                    const outputs = pollJson.outputs || []
-                    const url =
-                      outputs[0] ||
-                      (typeof pollJson.output === "string"
-                        ? pollJson.output
-                        : pollJson.output?.urls?.get)
-                    if (url) {
-                      resultImage = url
-                      status = "completed"
-                      completed = true
-                    }
-                  } else if (state === "failed") {
-                    status = "failed"
-                    break
-                  }
-                }
-              } catch { /* continue polling */ }
-            }
           } else if (resJson.output) {
             resultImage = resJson.output
             status = "completed"
@@ -127,7 +84,6 @@ export async function POST(req: Request) {
     }
 
     if (!resultImage && status !== "completed") {
-      await new Promise((resolve) => setTimeout(resolve, 3000))
       resultImage = FALLBACK_TRYONS[Math.floor(Math.random() * FALLBACK_TRYONS.length)]
       status = "completed"
     }

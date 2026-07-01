@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useRef, useState, useEffect } from "react"
 import { MoveHorizontal } from "lucide-react"
 
 type CompareSliderProps = {
@@ -12,8 +12,16 @@ type CompareSliderProps = {
 
 export function CompareSlider({ beforeSrc, afterSrc, beforeAlt, afterAlt }: CompareSliderProps) {
   const [position, setPosition] = useState(55)
+  const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width))
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
 
   const updateFromClientX = useCallback((clientX: number) => {
     const el = containerRef.current
@@ -70,7 +78,7 @@ export function CompareSlider({ beforeSrc, afterSrc, beforeAlt, afterAlt }: Comp
           src={beforeSrc || "/placeholder.svg"}
           alt={beforeAlt}
           className="absolute inset-0 h-full w-full max-w-none object-cover"
-          style={{ width: containerRef.current?.clientWidth ?? "100%" }}
+          style={{ width: containerWidth || "100%" }}
           draggable={false}
         />
         <span className="absolute left-3 top-3 rounded-full bg-background/70 px-3 py-1 text-xs font-medium text-foreground backdrop-blur">

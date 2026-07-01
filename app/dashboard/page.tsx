@@ -26,12 +26,19 @@ export default function DashboardPage() {
   const [selectedTryon, setSelectedTryon] = useState<TryOn | null>(null)
 
   useEffect(() => {
-    if (session?.user) {
-      fetchTryons()
-    } else if (status !== "loading") {
-      setLoading(false)
-    }
-  }, [session, status])
+    if (!session?.user) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch("/api/tryons")
+        if (res.ok && !cancelled) {
+          setTryons(await res.json())
+        }
+      } catch { /* ignore */ }
+      finally { if (!cancelled) setLoading(false) }
+    })()
+    return () => { cancelled = true }
+  }, [session])
 
   useEffect(() => {
     const hasProcessing = tryons.some((t) => t.status === "processing")
@@ -48,18 +55,6 @@ export default function DashboardPage() {
     }, 4000)
     return () => clearInterval(interval)
   }, [tryons])
-
-  const fetchTryons = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/tryons")
-      if (res.ok) {
-        const data = await res.json()
-        setTryons(data)
-      }
-    } catch { /* ignore */ }
-    finally { setLoading(false) }
-  }
 
   const handleDelete = async (id: string) => {
     if (!confirm("Вы уверены? Это действие нельзя отменить.")) return

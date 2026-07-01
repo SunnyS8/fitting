@@ -108,7 +108,7 @@ export function Pricing() {
 
     setLoadingPlan(planId)
     try {
-      const endpoint = isSubscription ? "/api/payment/create" : "/api/payment/create"
+      const endpoint = isSubscription ? "/api/payment/create-subscription" : "/api/payment/create"
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,7 +119,7 @@ export function Pricing() {
       if (!res.ok) throw new Error(data.error || "Ошибка оформления")
 
       if (data.url) {
-        window.location.href = data.url
+        window.location.assign(data.url)
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка при оплате")

@@ -7,24 +7,20 @@ const groups = [
       { label: "Возможности", href: "#features" },
       { label: "Тарифы", href: "#pricing" },
       { label: "Примеры", href: "#showcase" },
-      { label: "API", href: "#api" },
+      { label: "Примерка", href: "#try-on" },
     ],
   },
   {
     title: "Компания",
     links: [
-      { label: "О нас", href: "#" },
-      { label: "Блог", href: "#" },
-      { label: "Вакансии", href: "#" },
-      { label: "Контакты", href: "#" },
+      { label: "Блог", href: "https://habr.com" },
+      { label: "Контакты", href: "#cta" },
     ],
   },
   {
     title: "Поддержка",
     links: [
-      { label: "Помощь", href: "#" },
-      { label: "Конфиденциальность", href: "#" },
-      { label: "Условия", href: "#" },
+      { label: "Документация", href: "/docs" },
       { label: "Примерка", href: "#try-on" },
     ],
   },
