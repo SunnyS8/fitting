@@ -1,5 +1,12 @@
-import { Check, Gift, Package, CreditCard, TrendingDown } from "lucide-react"
+"use client"
+
+import { useState } from "react"
+import { Check, Gift, Package, CreditCard, TrendingDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useSession, signIn } from "next-auth/react"
+import toast from "react-hot-toast"
+
+const packIds = ["starter", "basic", "standard", "pro"] as const
 
 const packs = [
   {
@@ -7,6 +14,7 @@ const packs = [
     price: "199 ₽",
     generations: 5,
     perGen: "40 ₽",
+    planId: "starter",
     features: ["5 генераций", "Разрешение до HD"],
     cta: "Купить пакет",
     featured: false,
@@ -17,6 +25,7 @@ const packs = [
     price: "499 ₽",
     generations: 20,
     perGen: "25 ₽",
+    planId: "basic",
     features: ["20 генераций", "Разрешение до HD"],
     cta: "Купить пакет",
     featured: false,
@@ -27,6 +36,7 @@ const packs = [
     price: "999 ₽",
     generations: 60,
     perGen: "17 ₽",
+    planId: "standard",
     features: ["60 генераций", "Разрешение до 4K", "Без водяных знаков"],
     cta: "Купить пакет",
     featured: true,
@@ -37,12 +47,15 @@ const packs = [
     price: "2 499 ₽",
     generations: 120,
     perGen: "21 ₽",
+    planId: "pro",
     features: ["120 генераций", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"],
     cta: "Купить пакет",
     featured: false,
     badge: null,
   },
 ]
+
+const subIds = ["light", "pro", "unlimited"] as const
 
 const subscriptions = [
   {
@@ -51,6 +64,7 @@ const subscriptions = [
     period: "в месяц",
     generations: 25,
     perGen: "20 ₽",
+    planId: "light",
     features: ["25 генераций в месяц", "Разрешение до HD"],
     cta: "Оформить Light",
     featured: false,
@@ -62,6 +76,7 @@ const subscriptions = [
     period: "в месяц",
     generations: 80,
     perGen: "12.5 ₽",
+    planId: "pro",
     features: ["80 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"],
     cta: "Оформить Pro",
     featured: true,
@@ -73,6 +88,7 @@ const subscriptions = [
     period: "в месяц",
     generations: 150,
     perGen: "17 ₽",
+    planId: "unlimited",
     features: ["150 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка", "API-доступ"],
     cta: "Оформить Unlimited",
     featured: false,
@@ -81,6 +97,39 @@ const subscriptions = [
 ]
 
 export function Pricing() {
+  const { data: session } = useSession()
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+
+  async function handleCheckout(planId: string, isSubscription: boolean) {
+    if (!session?.user) {
+      signIn("google", { callbackUrl: "/#pricing" })
+      return
+    }
+
+    setLoadingPlan(planId)
+    try {
+      const endpoint = isSubscription ? "/api/payment/create" : "/api/payment/create"
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Ошибка оформления")
+
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка при оплате")
+    } finally {
+      setLoadingPlan(null)
+    }
+  }
+
+  const isLoading = (id: string) => loadingPlan === id
+
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-2xl text-center">
@@ -107,7 +156,7 @@ export function Pricing() {
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {packs.map((pack) => (
+        {packs.map((pack, i) => (
           <div
             key={pack.name}
             className={`relative flex flex-col rounded-2xl border p-6 ${
@@ -137,8 +186,15 @@ export function Pricing() {
                 </li>
               ))}
             </ul>
-            <Button className="mt-6 w-full" size="sm" variant={pack.featured ? "default" : "outline"} asChild>
-              <a href="#cta">{pack.cta}</a>
+            <Button
+              className="mt-6 w-full"
+              size="sm"
+              variant={pack.featured ? "default" : "outline"}
+              disabled={isLoading(pack.planId)}
+              onClick={() => handleCheckout(pack.planId, false)}
+            >
+              {isLoading(pack.planId) ? <Loader2 className="size-4 animate-spin" /> : null}
+              {pack.cta}
             </Button>
           </div>
         ))}
@@ -185,8 +241,14 @@ export function Pricing() {
                 </li>
               ))}
             </ul>
-            <Button className="mt-8 w-full" variant={sub.featured ? "default" : "outline"} asChild>
-              <a href="#cta">{sub.cta}</a>
+            <Button
+              className="mt-8 w-full"
+              variant={sub.featured ? "default" : "outline"}
+              disabled={isLoading(sub.planId)}
+              onClick={() => handleCheckout(sub.planId, true)}
+            >
+              {isLoading(sub.planId) ? <Loader2 className="size-4 animate-spin" /> : null}
+              {sub.cta}
             </Button>
           </div>
         ))}
