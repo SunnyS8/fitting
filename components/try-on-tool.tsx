@@ -2,9 +2,12 @@
 
 import type React from "react"
 import { useRef, useState } from "react"
-import { Upload, Sparkles, Loader2, RotateCcw, Download, ImageIcon, Shirt } from "lucide-react"
+import { Upload, Sparkles, Loader2, RotateCcw, Download, ImageIcon, Shirt, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useSession, signIn } from "next-auth/react"
+import Link from "next/link"
+import toast from "react-hot-toast"
 
 const presets = [
   "Элегантное чёрное вечернее платье",
@@ -27,6 +30,7 @@ function fileToDataUrl(file: File): Promise<string> {
 type GarmentMode = "preset" | "upload"
 
 export function TryOnTool() {
+  const { data: session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
   const garmentInputRef = useRef<HTMLInputElement>(null)
   const [personImage, setPersonImage] = useState<string | null>(null)
@@ -71,6 +75,10 @@ export function TryOnTool() {
 
   async function runTryOn() {
     if (!personImage) return
+    if (!session?.user) {
+      signIn("google", { callbackUrl: "/#try-on" })
+      return
+    }
     if (garmentMode === "upload" && !garmentImage) {
       setError("Загрузите фото одежды или выберите готовый образ.")
       return
@@ -89,6 +97,12 @@ export function TryOnTool() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
+      if (res.status === 402) {
+        toast.error("Недостаточно кредитов. Пополните баланс в разделе тарифов.")
+        setError("Недостаточно кредитов. Пополните баланс.")
+        setLoading(false)
+        return
+      }
       if (!res.ok) throw new Error(data.error || "Ошибка обработки")
       setResult(data.image)
     } catch (err) {

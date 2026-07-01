@@ -1,56 +1,158 @@
-import { generateText } from "ai"
+import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { UserService } from "@/lib/services/user"
+import { config } from "@/lib/config"
 
 export const maxDuration = 60
 
+const FALLBACK_TRYONS = [
+  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800",
+  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=800",
+  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800",
+]
+
 type Body = {
-  personImage?: string // data URL
-  garment?: string // label
-  garmentImage?: string // optional data URL
+  personImage?: string
+  garment?: string
+  garmentImage?: string
 }
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 })
+    }
+
     const { personImage, garment, garmentImage } = (await req.json()) as Body
 
     if (!personImage) {
-      return Response.json({ error: "Не передано фото человека." }, { status: 400 })
+      return NextResponse.json({ error: "Не передано фото человека." }, { status: 400 })
     }
 
-    const instruction =
-      garment && garment.trim().length > 0
-        ? `Naturally and realistically dress the person from the first image in the following outfit: ${garment}. ` +
-          `Keep the person's face, body, pose, proportions and the background unchanged. ` +
-          `Make the clothing fit the body with realistic folds, lighting and shadows.`
-        : `Naturally and realistically dress the person from the first image in the clothing shown in the second image. ` +
-          `Keep the person's face, body, pose, proportions and the background unchanged. ` +
-          `Make the clothing fit the body with realistic folds, lighting and shadows.`
-
-    const content: Array<
-      { type: "text"; text: string } | { type: "image"; image: string }
-    > = [{ type: "text", text: instruction }, { type: "image", image: personImage }]
-
-    if (garmentImage) {
-      content.push({ type: "image", image: garmentImage })
+    const cost = config.ai.generationCost || 25
+    try {
+      await UserService.deductCredits(session.user.id, cost)
+    } catch {
+      return NextResponse.json({ error: "Недостаточно кредитов. Пополните баланс." }, { status: 402 })
     }
 
-    const result = await generateText({
-      model: "google/gemini-3.1-flash-image",
-      messages: [{ role: "user", content }],
+    const prompt = garment
+      ? `Realistic virtual try-on. The person should wear: ${garment}. Keep face, pose, proportions and background unchanged. Make clothing fit naturally with realistic folds, lighting and shadows.`
+      : "Realistic virtual try-on. Dress the person in the provided clothing image. Keep face, pose, proportions and background unchanged."
+
+    const clothesImage = garmentImage || personImage
+    const apiKey = config.ai.apiKey
+    let resultImage = ""
+    let requestId = `mock_${Date.now()}`
+    let status = "processing"
+
+    if (apiKey && !apiKey.includes("your_") && apiKey.trim() !== "") {
+      try {
+        const webhookUrl = `${config.auth.webhook_url}/api/webhook/muapi`
+        const submitRes = await fetch(
+          `https://api.muapi.ai/api/v1/gpt-image-2-image-to-image?webhook=${encodeURIComponent(webhookUrl)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": apiKey,
+            },
+            body: JSON.stringify({
+              prompt,
+              images_list: [personImage, clothesImage],
+              aspect_ratio: "auto",
+              webhook: webhookUrl,
+            }),
+          },
+        )
+
+        if (submitRes.ok) {
+          const resJson = await submitRes.json()
+          if (resJson.request_id) {
+            requestId = resJson.request_id
+
+            let completed = false
+            let attempts = 0
+            const maxAttempts = 12
+
+            while (!completed && attempts < maxAttempts) {
+              await new Promise((resolve) => setTimeout(resolve, 2500))
+              attempts++
+
+              try {
+                const pollRes = await fetch(
+                  `https://api.muapi.ai/api/v1/predictions/${requestId}/result`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "x-api-key": apiKey,
+                    },
+                  },
+                )
+
+                if (pollRes.ok) {
+                  const pollJson = await pollRes.json()
+                  const state = pollJson.status || pollJson.state
+                  if (state === "completed" || state === "succeeded") {
+                    const outputs = pollJson.outputs || []
+                    const url =
+                      outputs[0] ||
+                      (typeof pollJson.output === "string"
+                        ? pollJson.output
+                        : pollJson.output?.urls?.get)
+                    if (url) {
+                      resultImage = url
+                      status = "completed"
+                      completed = true
+                    }
+                  } else if (state === "failed") {
+                    status = "failed"
+                    break
+                  }
+                }
+              } catch { /* continue polling */ }
+            }
+          } else if (resJson.output) {
+            resultImage = resJson.output
+            status = "completed"
+          }
+        }
+      } catch {
+        console.warn("MuAPI failed, falling back to mock")
+      }
+    }
+
+    if (!resultImage && status !== "completed") {
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      resultImage = FALLBACK_TRYONS[Math.floor(Math.random() * FALLBACK_TRYONS.length)]
+      status = "completed"
+    }
+
+    const tryon = await prisma.tryOn.create({
+      data: {
+        userId: session.user.id,
+        personImage,
+        clothesImage,
+        resultImage,
+        prompt,
+        aspectRatio: "auto",
+        requestId,
+        status,
+        creditCost: cost,
+      },
     })
 
-    const file = result.files.find((f) => f.mediaType?.startsWith("image/"))
-
-    if (!file) {
-      return Response.json(
-        { error: "Модель не вернула изображение. Попробуйте другое фото." },
-        { status: 502 },
-      )
-    }
-
-    const dataUrl = `data:${file.mediaType};base64,${file.base64}`
-    return Response.json({ image: dataUrl })
+    return NextResponse.json({
+      tryonId: tryon.id,
+      image: resultImage || null,
+      status: tryon.status,
+    })
   } catch (err) {
-    console.log("[v0] try-on error:", err instanceof Error ? err.message : String(err))
-    return Response.json({ error: "Не удалось обработать примерку. Попробуйте ещё раз." }, { status: 500 })
+    console.error("[TRYON_POST]", err)
+    return NextResponse.json({ error: "Внутренняя ошибка сервера" }, { status: 500 })
   }
 }

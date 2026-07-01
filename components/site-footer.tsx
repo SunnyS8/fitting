@@ -3,15 +3,30 @@ import { Sparkles } from "lucide-react"
 const groups = [
   {
     title: "Продукт",
-    links: ["Возможности", "Тарифы", "Примеры", "API"],
+    links: [
+      { label: "Возможности", href: "#features" },
+      { label: "Тарифы", href: "#pricing" },
+      { label: "Примеры", href: "#showcase" },
+      { label: "API", href: "#api" },
+    ],
   },
   {
     title: "Компания",
-    links: ["О нас", "Блог", "Вакансии", "Контакты"],
+    links: [
+      { label: "О нас", href: "#" },
+      { label: "Блог", href: "#" },
+      { label: "Вакансии", href: "#" },
+      { label: "Контакты", href: "#" },
+    ],
   },
   {
     title: "Поддержка",
-    links: ["Помощь", "Конфиденциальность", "Условия", "Статус"],
+    links: [
+      { label: "Помощь", href: "#" },
+      { label: "Конфиденциальность", href: "#" },
+      { label: "Условия", href: "#" },
+      { label: "Примерка", href: "#try-on" },
+    ],
   },
 ]
 
@@ -37,12 +52,12 @@ export function SiteFooter() {
               <h3 className="text-sm font-semibold">{group.title}</h3>
               <ul className="mt-4 space-y-3">
                 {group.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <a
-                      href="#"
+                      href={link.href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      {link}
+                      {link.label}
                     </a>
                   </li>
                 ))}

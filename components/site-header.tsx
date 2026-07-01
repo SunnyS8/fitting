@@ -1,5 +1,9 @@
-import { Sparkles } from "lucide-react"
+"use client"
+
+import { Sparkles, Coins, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useSession, signOut } from "next-auth/react"
+import Link from "next/link"
 
 const navLinks = [
   { label: "Примерка", href: "#try-on" },
@@ -10,6 +14,8 @@ const navLinks = [
 ]
 
 export function SiteHeader() {
+  const { data: session } = useSession()
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -33,9 +39,28 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" className="hidden sm:inline-flex" asChild>
-            <a href="#">Войти</a>
-          </Button>
+          {session?.user ? (
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs">
+                  <Coins className="size-3.5 text-primary" />
+                  <span>{session.user.credits ?? 0}</span>
+                </Button>
+              </Link>
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-xs text-muted-foreground max-w-[120px] truncate">
+                  {session.user.name}
+                </span>
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => signOut()}>
+                  Выйти
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="ghost" className="hidden sm:inline-flex" asChild>
+              <Link href="/login">Войти</Link>
+            </Button>
+          )}
           <Button asChild>
             <a href="#cta">Попробовать</a>
           </Button>
