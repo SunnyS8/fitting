@@ -1,5 +1,8 @@
 export const config = {
-  appName: "Atelier AI",
+  appName: "FitBot",
+  telegram: {
+    botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+  },
   auth: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -8,6 +11,7 @@ export const config = {
     secret: process.env.NEXTAUTH_SECRET,
     url: process.env.NEXTAUTH_URL || "http://localhost:3000",
     webhook_url: process.env.WEBHOOK_URL || process.env.NEXTAUTH_URL || "http://localhost:3000",
+    fitbotSecret: process.env.FITBOT_SECRET || "",
   },
   yookassa: {
     shopId: process.env.YOOKASSA_SHOP_ID,
