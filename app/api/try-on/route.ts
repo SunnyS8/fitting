@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { UserService } from "@/lib/services/user"
 import { config } from "@/lib/config"
+import { rateLimitFromRequest } from "@/lib/rate-limit"
 
 export const maxDuration = 60
 
@@ -18,6 +19,11 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
       return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 })
+    }
+
+    const rl = rateLimitFromRequest(req, { windowMs: 60_000, max: 10 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Слишком много запросов. Подождите минуту." }, { status: 429 })
     }
 
     const { personImage, garment, garmentImage } = (await req.json()) as Body

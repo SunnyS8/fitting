@@ -2,11 +2,10 @@
 
 import type React from "react"
 import { useRef, useState } from "react"
-import { Upload, Sparkles, Loader2, RotateCcw, Download, ImageIcon, Shirt, LogIn } from "lucide-react"
+import { Upload, Sparkles, Loader2, RotateCcw, Download, ImageIcon, Shirt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useSession, signIn } from "next-auth/react"
-import Link from "next/link"
 import toast from "react-hot-toast"
 
 const presets = [
@@ -18,7 +17,7 @@ const presets = [
   "Уютный вязаный oversize-свитер",
 ]
 
-function fileToDataUrl(file: File): Promise<string> {
+function fileToPreview(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(reader.result as string)
@@ -27,59 +26,74 @@ function fileToDataUrl(file: File): Promise<string> {
   })
 }
 
+async function uploadFile(file: File): Promise<string> {
+  const fd = new FormData()
+  fd.append("file", file)
+  const res = await fetch("/api/upload", { method: "POST", body: fd })
+  if (!res.ok) throw new Error("Upload failed")
+  const data = await res.json()
+  return data.url
+}
+
 type GarmentMode = "preset" | "upload"
 
 export function TryOnTool() {
   const { data: session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
   const garmentInputRef = useRef<HTMLInputElement>(null)
-  const [personImage, setPersonImage] = useState<string | null>(null)
+  const [personFile, setPersonFile] = useState<File | null>(null)
+  const [personPreview, setPersonPreview] = useState<string | null>(null)
   const [garmentMode, setGarmentMode] = useState<GarmentMode>("preset")
   const [garment, setGarment] = useState<string>(presets[1])
-  const [garmentImage, setGarmentImage] = useState<string | null>(null)
+  const [garmentFile, setGarmentFile] = useState<File | null>(null)
+  const [garmentPreview, setGarmentPreview] = useState<string | null>(null)
   const [result, setResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const [garmentDragging, setGarmentDragging] = useState(false)
 
-  async function readImageFile(files: FileList | null): Promise<string | null> {
+  async function handleFiles(files: FileList | null) {
+    setError(null)
     const file = files?.[0]
-    if (!file) return null
+    if (!file) return
     if (!file.type.startsWith("image/")) {
       setError("Пожалуйста, загрузите изображение.")
-      return null
+      return
     }
     if (file.size > 8 * 1024 * 1024) {
       setError("Файл слишком большой. Максимум 8 МБ.")
-      return null
+      return
     }
-    return fileToDataUrl(file)
-  }
-
-  async function handleFiles(files: FileList | null) {
-    setError(null)
-    const dataUrl = await readImageFile(files)
-    if (!dataUrl) return
-    setPersonImage(dataUrl)
+    setPersonFile(file)
+    setPersonPreview(await fileToPreview(file))
     setResult(null)
   }
 
   async function handleGarmentFiles(files: FileList | null) {
     setError(null)
-    const dataUrl = await readImageFile(files)
-    if (!dataUrl) return
-    setGarmentImage(dataUrl)
+    const file = files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      setError("Пожалуйста, загрузите изображение.")
+      return
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setError("Файл слишком большой. Максимум 8 МБ.")
+      return
+    }
+    setGarmentFile(file)
+    setGarmentPreview(await fileToPreview(file))
     setResult(null)
   }
 
   async function runTryOn() {
-    if (!personImage) return
+    if (!personFile) return
     if (!session?.user) {
       signIn("google", { callbackUrl: "/#try-on" })
       return
     }
-    if (garmentMode === "upload" && !garmentImage) {
+    if (garmentMode === "upload" && !garmentFile) {
       setError("Загрузите фото одежды или выберите готовый образ.")
       return
     }
@@ -87,10 +101,16 @@ export function TryOnTool() {
     setError(null)
     setResult(null)
     try {
+      const [personUrl, garmentUrl] = await Promise.all([
+        uploadFile(personFile),
+        garmentMode === "upload" && garmentFile ? uploadFile(garmentFile) : Promise.resolve(null),
+      ])
+
       const body =
-        garmentMode === "upload"
-          ? { personImage, garmentImage }
-          : { personImage, garment }
+        garmentMode === "upload" && garmentUrl
+          ? { personImage: personUrl, garmentImage: garmentUrl }
+          : { personImage: personUrl, garment }
+
       const res = await fetch("/api/try-on", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -107,7 +127,7 @@ export function TryOnTool() {
 
       if (data.status === "processing" && data.tryonId) {
         const id = data.tryonId
-        while (true) {
+        for (let i = 0; i < 30; i++) {
           await new Promise((r) => setTimeout(r, 3000))
           const pollRes = await fetch(`/api/tryons?id=${id}`)
           if (!pollRes.ok) break
@@ -131,7 +151,8 @@ export function TryOnTool() {
   }
 
   function reset() {
-    setPersonImage(null)
+    setPersonFile(null)
+    setPersonPreview(null)
     setResult(null)
     setError(null)
   }
@@ -154,31 +175,22 @@ export function TryOnTool() {
         </div>
 
         <div className="mx-auto mt-12 grid max-w-4xl gap-6 lg:grid-cols-2">
-          {/* Input column */}
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div>
               <p className="mb-3 text-sm font-medium">1. Ваше фото</p>
               <div
-                onClick={() => !personImage && inputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setDragging(true)
-                }}
+                onClick={() => !personFile && inputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
                 onDragLeave={() => setDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  setDragging(false)
-                  handleFiles(e.dataTransfer.files)
-                }}
+                onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files) }}
                 className={cn(
                   "relative flex aspect-[3/4] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-background/50 transition-colors",
                   dragging && "border-primary bg-primary/5",
-                  personImage && "cursor-default border-solid",
+                  personFile && "cursor-default border-solid",
                 )}
               >
-                {personImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={personImage || "/placeholder.svg"} alt="Загруженное фото" className="h-full w-full object-cover" />
+                {personFile && personPreview ? (
+                  <img src={personPreview} alt="Загруженное фото" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex flex-col items-center gap-2 px-6 text-center">
                     <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
@@ -189,14 +201,8 @@ export function TryOnTool() {
                   </div>
                 )}
               </div>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-              {personImage && (
+              <input ref={inputRef} type="file" accept="image/*" className="sr-only" onChange={(e) => handleFiles(e.target.files)} />
+              {personFile && (
                 <Button variant="ghost" size="sm" className="mt-2" onClick={reset}>
                   <RotateCcw className="size-3.5" />
                   Выбрать другое фото
@@ -207,28 +213,10 @@ export function TryOnTool() {
             <div>
               <p className="mb-3 text-sm font-medium">2. Выберите образ</p>
               <div className="mb-3 inline-flex rounded-lg border border-border bg-background p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setGarmentMode("preset")}
-                  className={cn(
-                    "rounded-md px-3 py-1.5 font-medium transition-colors",
-                    garmentMode === "preset"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
+                <button type="button" onClick={() => setGarmentMode("preset")} className={cn("rounded-md px-3 py-1.5 font-medium transition-colors", garmentMode === "preset" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                   Готовый образ
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setGarmentMode("upload")}
-                  className={cn(
-                    "rounded-md px-3 py-1.5 font-medium transition-colors",
-                    garmentMode === "upload"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
+                <button type="button" onClick={() => setGarmentMode("upload")} className={cn("rounded-md px-3 py-1.5 font-medium transition-colors", garmentMode === "upload" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
                   Своё фото одежды
                 </button>
               </div>
@@ -236,17 +224,7 @@ export function TryOnTool() {
               {garmentMode === "preset" ? (
                 <div className="flex flex-wrap gap-2">
                   {presets.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setGarment(p)}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                        garment === p
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-muted-foreground hover:text-foreground",
-                      )}
-                    >
+                    <button key={p} type="button" onClick={() => setGarment(p)} className={cn("rounded-full border px-3 py-1.5 text-xs transition-colors", garment === p ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:text-foreground")}>
                       {p}
                     </button>
                   ))}
@@ -255,29 +233,13 @@ export function TryOnTool() {
                 <div className="flex items-center gap-3">
                   <div
                     onClick={() => garmentInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setGarmentDragging(true)
-                    }}
+                    onDragOver={(e) => { e.preventDefault(); setGarmentDragging(true) }}
                     onDragLeave={() => setGarmentDragging(false)}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      setGarmentDragging(false)
-                      handleGarmentFiles(e.dataTransfer.files)
-                    }}
-                    className={cn(
-                      "relative flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-background/50 transition-colors",
-                      garmentDragging && "border-primary bg-primary/5",
-                      garmentImage && "border-solid",
-                    )}
+                    onDrop={(e) => { e.preventDefault(); setGarmentDragging(false); handleGarmentFiles(e.dataTransfer.files) }}
+                    className={cn("relative flex size-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-background/50 transition-colors", garmentDragging && "border-primary bg-primary/5", garmentFile && "border-solid")}
                   >
-                    {garmentImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={garmentImage || "/placeholder.svg"}
-                        alt="Фото одежды"
-                        className="h-full w-full object-cover"
-                      />
+                    {garmentFile && garmentPreview ? (
+                      <img src={garmentPreview} alt="Фото одежды" className="h-full w-full object-cover" />
                     ) : (
                       <Shirt className="size-6 text-muted-foreground" />
                     )}
@@ -285,42 +247,25 @@ export function TryOnTool() {
                   <div className="text-xs text-muted-foreground">
                     <p className="font-medium text-foreground">Загрузите фото вещи</p>
                     <p className="mt-1">Лучше всего подойдёт фото одежды на однотонном фоне. PNG/JPG до 8 МБ.</p>
-                    {garmentImage && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-1.5 h-7 px-2"
-                        onClick={() => setGarmentImage(null)}
-                      >
+                    {garmentFile && (
+                      <Button variant="ghost" size="sm" className="mt-1.5 h-7 px-2" onClick={() => { setGarmentFile(null); setGarmentPreview(null) }}>
                         <RotateCcw className="size-3.5" />
                         Заменить
                       </Button>
                     )}
                   </div>
-                  <input
-                    ref={garmentInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={(e) => handleGarmentFiles(e.target.files)}
-                  />
+                  <input ref={garmentInputRef} type="file" accept="image/*" className="sr-only" onChange={(e) => handleGarmentFiles(e.target.files)} />
                 </div>
               )}
             </div>
 
-            <Button
-              size="lg"
-              onClick={runTryOn}
-              disabled={!personImage || loading || (garmentMode === "upload" && !garmentImage)}
-              className="mt-1"
-            >
+            <Button size="lg" onClick={runTryOn} disabled={!personFile || loading || (garmentMode === "upload" && !garmentFile)} className="mt-1">
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
               {loading ? "Генерируем образ…" : "Примерить"}
             </Button>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
-          {/* Result column */}
           <div className="flex flex-col rounded-2xl border border-border bg-card p-5 sm:p-6">
             <p className="mb-3 text-sm font-medium">Результат</p>
             <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden rounded-xl border border-border bg-background/50">
@@ -331,8 +276,7 @@ export function TryOnTool() {
                 </div>
               )}
               {!loading && result && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={result || "/placeholder.svg"} alt="Результат AI-примерки" className="h-full w-full object-cover" />
+                <img src={result} alt="Результат AI-примерки" className="h-full w-full object-cover" />
               )}
               {!loading && !result && (
                 <div className="flex flex-col items-center gap-2 px-6 text-center text-muted-foreground">

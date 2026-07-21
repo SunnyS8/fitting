@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { config } from "@/lib/config"
+import { prisma } from "@/lib/prisma"
+import { UserService } from "@/lib/services/user"
 
 function extractImageUrl(pollJson: Record<string, unknown>): string {
   const outputs = (pollJson.outputs || []) as string[]
@@ -18,13 +20,27 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { personImage, garment } = (await req.json()) as {
+    const { personImage, garment, chatId } = (await req.json()) as {
       personImage?: string
       garment?: string
+      chatId?: string
     }
 
     if (!personImage) {
       return NextResponse.json({ error: "Нет фото" }, { status: 400 })
+    }
+
+    if (!chatId) {
+      return NextResponse.json({ error: "Нет chatId" }, { status: 400 })
+    }
+
+    const userId = `tg_${chatId}`
+    const cost = config.ai.generationCost
+
+    try {
+      await UserService.deductCredits(userId, cost)
+    } catch {
+      return NextResponse.json({ error: "Недостаточно кредитов" }, { status: 402 })
     }
 
     const sanitized = (garment || "").replace(/[^\w\sа-яА-Я\-.,!?"']/g, "").slice(0, 200)
@@ -47,7 +63,7 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({
               prompt,
-              images_list: [personImage, personImage],
+              images_list: [personImage],
               aspect_ratio: "auto",
             }),
           },
@@ -82,7 +98,7 @@ export async function POST(req: Request) {
           }
         }
       } catch {
-        console.warn("[FITBOT] MuAPI failed, using fallback")
+        console.warn("[FITBOT] MuAPI failed")
       }
     }
 

@@ -1,21 +1,23 @@
+import { getEnv } from "./env"
+
+const env = getEnv()
+
 export const config = {
   appName: "FitBot",
   telegram: {
-    botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+    botToken: env.TELEGRAM_BOT_TOKEN || "",
   },
   auth: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
-    secret: process.env.NEXTAUTH_SECRET,
-    url: process.env.NEXTAUTH_URL || "http://localhost:3000",
-    webhook_url: process.env.WEBHOOK_URL || process.env.NEXTAUTH_URL || "http://localhost:3000",
-    fitbotSecret: process.env.FITBOT_SECRET || "",
+    secret: env.NEXTAUTH_SECRET,
+    url: env.NEXTAUTH_URL,
+    webhook_url: env.WEBHOOK_URL || env.NEXTAUTH_URL,
+    fitbotSecret: env.FITBOT_SECRET || "",
   },
   yookassa: {
-    shopId: process.env.YOOKASSA_SHOP_ID,
-    secretKey: process.env.YOOKASSA_SECRET_KEY,
     plans: {
       starter: { id: "starter", name: "Стартовый", credits: 125, price: 199, label: "199₽" },
       basic: { id: "basic", name: "Базовый", credits: 500, price: 499, label: "499₽" },
@@ -29,12 +31,9 @@ export const config = {
     },
   },
   ai: {
-    apiKey: process.env.MUAPIAPP_API_KEY || "",
+    apiKey: env.MUAPIAPP_API_KEY,
     generationCost: 25,
     freeTierCredits: 75,
-  },
-  db: {
-    url: process.env.DATABASE_URL,
   },
 }
 

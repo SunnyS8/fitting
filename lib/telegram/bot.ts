@@ -11,7 +11,7 @@ bot.start(async (ctx) => {
     `👋 Привет, ${name}!\n\n` +
     "Я FitBot — виртуальная примерочная в Telegram.\n\n" +
     "📸 Просто загрузи своё фото в полный рост, а затем кинь ссылку на вещь с Wildberries или Ozon — я покажу, как она на тебе сидит.\n\n" +
-    "У тебя 3 бесплатных примерки в день.",
+    "У тебя 3 бесплатных примерки.",
     {
       reply_markup: {
         keyboard: [[{ text: "📸 Загрузить фото" }]],
@@ -61,6 +61,7 @@ bot.on("text", async (ctx) => {
       body: JSON.stringify({
         personImage: s.photoUrl,
         garment: text,
+        chatId: String(ctx.chat.id),
       }),
     })
 
@@ -71,35 +72,17 @@ bot.on("text", async (ctx) => {
         "❌ Недостаточно кредитов.\n\n" +
         "Купи подписку в боте: /subscribe"
       )
+      s.photoUrl = null
       return
     }
 
     if (!res.ok) {
       await ctx.reply("❌ Ошибка: " + (data.error || "Не удалось обработать запрос"))
+      s.photoUrl = null
       return
     }
 
-    if (data.status === "processing") {
-      await ctx.reply("⏳ Обрабатываю... Подожди немного.")
-      const id = data.tryonId
-      let found = false
-      for (let i = 0; i < 20; i++) {
-        await new Promise((r) => setTimeout(r, 3000))
-        const pollRes = await fetch(`${config.auth.webhook_url}/api/tryons?id=${id}`)
-        if (!pollRes.ok) break
-        const pollData = await pollRes.json()
-        if (pollData.status === "completed" && pollData.resultImage) {
-          await ctx.replyWithPhoto(Input.fromURL(pollData.resultImage), {
-            caption: "✨ Результат примерки!",
-          })
-          s.photoUrl = null
-          found = true
-          break
-        }
-        if (pollData.status === "failed") break
-      }
-      if (!found) await ctx.reply("❌ Время ожидания истекло. Попробуй ещё раз.")
-    } else if (data.image) {
+    if (data.image) {
       await ctx.replyWithPhoto(Input.fromURL(data.image), {
         caption: "✨ Результат примерки!",
       })
@@ -108,21 +91,31 @@ bot.on("text", async (ctx) => {
   } catch (err) {
     console.error("[FITBOT_ERROR]", err)
     await ctx.reply("❌ Что-то пошло не так. Попробуй ещё раз.")
+    s.photoUrl = null
   }
 })
 
 bot.command("subscribe", async (ctx) => {
+  const { yookassa } = config
+  const generationCost = config.ai.generationCost
+
+  const packLines = Object.values(yookassa.plans).map((p) => {
+    const gens = Math.floor(p.credits / generationCost)
+    return `  /pay_${p.id} — ${gens} примерок за ${p.price}₽`
+  })
+
+  const subLines = Object.values(yookassa.subscriptions).map((p) => {
+    const gens = Math.floor(p.creditsPerMonth / generationCost)
+    return `  /sub_${p.id} — ${gens} примерок/мес за ${p.price}₽`
+  })
+
   await ctx.reply(
     "💎 FitBot Premium\n\n" +
     "📦 Пакеты (одноразово):\n" +
-    "  /pay_starter — 125 примерок за 199₽\n" +
-    "  /pay_basic — 500 примерок за 499₽\n" +
-    "  /pay_standard — 1500 примерок за 999₽ ⭐\n\n" +
-    "🔄 Подписки (каждый месяц):\n" +
-    "  /sub_light — 625 примерок/мес за 499₽\n" +
-    "  /sub_pro — 2000 примерок/мес за 999₽\n" +
-    "  /sub_unlimited — 3750 примерок/мес за 2499₽\n\n" +
-    "Оплата через ЮKassa. После оплаты кредиты зачислятся автоматически.",
+    packLines.join("\n") +
+    "\n\n🔄 Подписки (каждый месяц):\n" +
+    subLines.join("\n") +
+    "\n\nОплата через ЮKassa. После оплаты кредиты зачислятся автоматически.",
   )
 })
 

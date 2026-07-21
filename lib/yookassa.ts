@@ -15,7 +15,7 @@ export const yookassa = {
     const returnUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
     const body = JSON.stringify({
       amount: { value: amount.toFixed(2), currency: "RUB" },
-      confirmation: { type: "redirect", return_url: `${returnUrl}/pricing?payment=success` },
+      confirmation: { type: "redirect", return_url: `${returnUrl}/dashboard?payment=success` },
       capture: true,
       description,
       metadata,

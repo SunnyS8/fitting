@@ -38,16 +38,21 @@ export async function GET(req: Request) {
       const plan = config.yookassa.subscriptions[user.subscriptionPlan as keyof typeof config.yookassa.subscriptions]
       if (!plan) continue
 
-      const lastRenewal = user.subscriptionPeriodEnd
-      if (lastRenewal <= now) continue
-
-      const daysSinceLast = Math.floor((now.getTime() - lastRenewal.getTime()) / (1000 * 60 * 60 * 24))
+      const daysSinceLast = Math.floor((now.getTime() - user.subscriptionPeriodEnd.getTime()) / (1000 * 60 * 60 * 24))
       if (daysSinceLast <= 0) continue
 
       const monthsSince = Math.floor(daysSinceLast / 30)
       if (monthsSince < 1) continue
 
       await UserService.addCredits(user.id, plan.creditsPerMonth * monthsSince)
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          subscriptionPeriodEnd: new Date(user.subscriptionPeriodEnd.getTime() + monthsSince * 30 * 24 * 60 * 60 * 1000),
+        },
+      })
+
       renewed++
     }
 

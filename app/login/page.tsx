@@ -40,7 +40,10 @@ function LoginContent() {
         </button>
 
         <p className="mt-6 text-xs text-muted-foreground text-center">
-          Входя в аккаунт, вы соглашаетесь с нашими Условиями использования.
+          Входя в аккаунт, вы соглашаетесь с{" "}
+          <a href="/terms" className="underline hover:text-foreground">Условиями использования</a>{" "}
+          и{" "}
+          <a href="/privacy" className="underline hover:text-foreground">Политикой конфиденциальности</a>.
         </p>
       </div>
     </div>

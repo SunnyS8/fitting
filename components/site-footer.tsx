@@ -13,15 +13,21 @@ const groups = [
   {
     title: "Компания",
     links: [
-      { label: "Блог", href: "https://habr.com" },
       { label: "Контакты", href: "#cta" },
     ],
   },
   {
     title: "Поддержка",
     links: [
-      { label: "Документация", href: "/docs" },
       { label: "Примерка", href: "#try-on" },
+      { label: "Контакты", href: "#cta" },
+    ],
+  },
+  {
+    title: "Правовая информация",
+    links: [
+      { label: "Условия использования", href: "/terms" },
+      { label: "Политика конфиденциальности", href: "/privacy" },
     ],
   },
 ]
@@ -32,7 +38,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
-            <a href="#" className="flex items-center gap-2">
+            <a href="/" className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Sparkles className="size-4" />
               </span>
@@ -64,7 +70,10 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">© 2026 Atelier AI. Все права защищены.</p>
-          <p className="text-sm text-muted-foreground">Сделано с заботой о вашем гардеробе</p>
+          <div className="flex gap-4">
+            <a href="/terms" className="text-xs text-muted-foreground hover:text-foreground">Условия</a>
+            <a href="/privacy" className="text-xs text-muted-foreground hover:text-foreground">Конфиденциальность</a>
+          </div>
         </div>
       </div>
     </footer>

@@ -20,14 +20,14 @@ export const UserService = {
 
   async deductCredits(userId: string, amount: number) {
     if (amount <= 0) return
-    const currentCredits = await this.getCredits(userId)
-    if (currentCredits < amount) {
-      throw new Error("Insufficient credits available")
-    }
-    return await prisma.user.update({
-      where: { id: userId },
+    const result = await prisma.user.updateMany({
+      where: { id: userId, credits: { gte: amount } },
       data: { credits: { decrement: amount } },
     })
+    if (result.count === 0) {
+      throw new Error("Insufficient credits available")
+    }
+    return await prisma.user.findUnique({ where: { id: userId } })
   },
 
   async giveFreeCreditsIfNeeded(userId: string) {
@@ -63,16 +63,5 @@ export const UserService = {
       return false
     }
     return true
-  },
-
-  async addSubscriptionCredits(userId: string, planId: string) {
-    type Subs = keyof typeof config.yookassa.subscriptions
-    const plan = config.yookassa.subscriptions[planId as Subs]
-    if (!plan) throw new Error("Invalid subscription plan")
-
-    return await prisma.user.update({
-      where: { id: userId },
-      data: { credits: { increment: plan.creditsPerMonth } },
-    })
   },
 }

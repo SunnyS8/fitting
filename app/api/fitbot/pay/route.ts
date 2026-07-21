@@ -2,19 +2,6 @@ import { NextResponse } from "next/server"
 import { config } from "@/lib/config"
 import { yookassa } from "@/lib/yookassa"
 
-const plans: Record<string, { name: string; credits: number; price: number }> = {
-  starter: { name: "Стартовый", credits: 125, price: 199 },
-  basic: { name: "Базовый", credits: 500, price: 499 },
-  standard: { name: "Стандарт", credits: 1500, price: 999 },
-  pro: { name: "Профи", credits: 3000, price: 2499 },
-}
-
-const subs: Record<string, { name: string; credits: number; price: number }> = {
-  light: { name: "Light", credits: 625, price: 499 },
-  pro: { name: "Pro", credits: 2000, price: 999 },
-  unlimited: { name: "Unlimited", credits: 3750, price: 2499 },
-}
-
 export async function POST(req: Request) {
   const auth = req.headers.get("authorization")
   if (auth !== `Bearer ${config.auth.fitbotSecret}`) {
@@ -35,29 +22,29 @@ export async function POST(req: Request) {
     const userId = `tg_${chatId}`
 
     if (isSubscription) {
-      const plan = subs[planId]
+      const plan = config.yookassa.subscriptions[planId as keyof typeof config.yookassa.subscriptions]
       if (!plan) return NextResponse.json({ error: "Неверный план" }, { status: 400 })
 
       const result = await yookassa.createPayment({
         amount: plan.price,
-        description: `FitBot: подписка «${plan.name}» — ${plan.credits} примерок/мес`,
+        description: `FitBot: подписка «${plan.name}» — ${plan.creditsPerMonth} кредитов/мес`,
         metadata: {
           userId,
           plan: planId,
           type: "subscription",
-          credits: plan.credits.toString(),
+          credits: plan.creditsPerMonth.toString(),
         },
       })
 
       return NextResponse.json({ url: result.confirmationUrl })
     }
 
-    const plan = plans[planId]
+    const plan = config.yookassa.plans[planId as keyof typeof config.yookassa.plans]
     if (!plan) return NextResponse.json({ error: "Неверный план" }, { status: 400 })
 
     const result = await yookassa.createPayment({
       amount: plan.price,
-      description: `FitBot: пакет «${plan.name}» — ${plan.credits} примерок`,
+      description: `FitBot: пакет «${plan.name}» — ${plan.credits} кредитов`,
       metadata: {
         userId,
         credits: plan.credits.toString(),

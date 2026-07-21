@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/api/try-on/route.ts": { "maxDuration": 60 },
+    "app/api/fitbot/try-on/route.ts": { "maxDuration": 60 },
+    "app/api/cron/renew-subscriptions/route.ts": { "maxDuration": 120 }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/renew-subscriptions",
+      "schedule": "0 3 1 * *"
+    }
+  ]
+}

@@ -6,7 +6,7 @@ const SECRET = process.env.MUAPI_WEBHOOK_SECRET || process.env.FITBOT_SECRET || 
 export async function POST(req: Request) {
   try {
     const headerSecret = req.headers.get("x-webhook-secret")
-    if (SECRET && headerSecret !== SECRET) {
+    if (!SECRET || headerSecret !== SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -45,6 +45,11 @@ export async function POST(req: Request) {
         await prisma.tryOn.update({
           where: { id: tryon.id },
           data: { status: "completed", resultImage: imageUrl },
+        })
+      } else {
+        await prisma.tryOn.update({
+          where: { id: tryon.id },
+          data: { status: "failed" },
         })
       }
     }

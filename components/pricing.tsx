@@ -5,96 +5,48 @@ import { Check, Gift, Package, CreditCard, TrendingDown, Loader2 } from "lucide-
 import { Button } from "@/components/ui/button"
 import { useSession, signIn } from "next-auth/react"
 import toast from "react-hot-toast"
+import { config } from "@/lib/config"
 
-const packIds = ["starter", "basic", "standard", "pro"] as const
+const generationCost = config.ai.generationCost
 
-const packs = [
-  {
-    name: "Стартовый",
-    price: "199 ₽",
-    generations: 5,
-    perGen: "40 ₽",
-    planId: "starter",
-    features: ["5 генераций", "Разрешение до HD"],
+const packs = Object.values(config.yookassa.plans).map((plan) => {
+  const generations = Math.floor(plan.credits / generationCost)
+  return {
+    name: plan.name,
+    price: `${plan.price} ₽`,
+    generations,
+    perGen: `${(plan.price / generations).toFixed(0)} ₽`,
+    planId: plan.id,
+    features: [`${generations} генераций`, "Разрешение до HD"],
     cta: "Купить пакет",
     featured: false,
-    badge: null,
-  },
-  {
-    name: "Базовый",
-    price: "499 ₽",
-    generations: 20,
-    perGen: "25 ₽",
-    planId: "basic",
-    features: ["20 генераций", "Разрешение до HD"],
-    cta: "Купить пакет",
-    featured: false,
-    badge: null,
-  },
-  {
-    name: "Стандарт",
-    price: "999 ₽",
-    generations: 60,
-    perGen: "17 ₽",
-    planId: "standard",
-    features: ["60 генераций", "Разрешение до 4K", "Без водяных знаков"],
-    cta: "Купить пакет",
-    featured: true,
-    badge: "Лучшая цена",
-  },
-  {
-    name: "Профи",
-    price: "2 499 ₽",
-    generations: 120,
-    perGen: "21 ₽",
-    planId: "pro",
-    features: ["120 генераций", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"],
-    cta: "Купить пакет",
-    featured: false,
-    badge: null,
-  },
-]
+    badge: null as string | null,
+  }
+})
+packs[2].featured = true
+packs[2].badge = "Лучшая цена"
+packs[2].features = ["60 генераций", "Разрешение до 4K", "Без водяных знаков"]
+packs[3].features = ["120 генераций", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"]
 
-const subIds = ["light", "pro", "unlimited"] as const
-
-const subscriptions = [
-  {
-    name: "Light",
-    price: "499 ₽",
+const subscriptions = Object.values(config.yookassa.subscriptions).map((plan) => {
+  const generations = Math.floor(plan.creditsPerMonth / generationCost)
+  return {
+    name: plan.name,
+    price: `${plan.price} ₽`,
     period: "в месяц",
-    generations: 25,
-    perGen: "20 ₽",
-    planId: "light",
-    features: ["25 генераций в месяц", "Разрешение до HD"],
-    cta: "Оформить Light",
+    generations,
+    perGen: `${(plan.price / generations).toFixed(1)} ₽`,
+    planId: plan.id,
+    features: [`${generations} генераций в месяц`, "Разрешение до HD"],
+    cta: `Оформить ${plan.name}`,
     featured: false,
-    badge: null,
-  },
-  {
-    name: "Pro",
-    price: "999 ₽",
-    period: "в месяц",
-    generations: 80,
-    perGen: "12.5 ₽",
-    planId: "pro",
-    features: ["80 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"],
-    cta: "Оформить Pro",
-    featured: true,
-    badge: "Выгоднее всех",
-  },
-  {
-    name: "Unlimited",
-    price: "2 499 ₽",
-    period: "в месяц",
-    generations: 150,
-    perGen: "17 ₽",
-    planId: "unlimited",
-    features: ["150 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка", "API-доступ"],
-    cta: "Оформить Unlimited",
-    featured: false,
-    badge: null,
-  },
-]
+    badge: null as string | null,
+  }
+})
+subscriptions[1].featured = true
+subscriptions[1].badge = "Выгоднее всех"
+subscriptions[1].features = ["80 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка"]
+subscriptions[2].features = ["150 генераций в месяц", "Разрешение до 4K", "Без водяных знаков", "Приоритетная обработка", "API-доступ"]
 
 export function Pricing() {
   const { data: session } = useSession()
@@ -156,9 +108,9 @@ export function Pricing() {
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {packs.map((pack, i) => (
+        {packs.map((pack) => (
           <div
-            key={pack.name}
+            key={pack.planId}
             className={`relative flex flex-col rounded-2xl border p-6 ${
               pack.featured
                 ? "border-primary bg-card shadow-[0_0_0_1px_var(--primary)]"
@@ -211,7 +163,7 @@ export function Pricing() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {subscriptions.map((sub) => (
           <div
-            key={sub.name}
+            key={sub.planId}
             className={`relative flex flex-col rounded-2xl border p-8 ${
               sub.featured
                 ? "border-primary bg-card shadow-[0_0_0_1px_var(--primary)]"

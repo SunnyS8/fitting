@@ -36,6 +36,22 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  openGraph: {
+    title: 'Atelier AI — Виртуальная AI-примерка одежды',
+    description:
+      'Загрузите фото и примерьте любую одежду за секунды. Реалистичная AI-примерка.',
+    url: 'https://atelier-ai.ru',
+    siteName: 'Atelier AI',
+    locale: 'ru_RU',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Atelier AI — Виртуальная AI-примерка одежды',
+    description:
+      'Загрузите фото и примерьте любую одежду за секунды. Реалистичная AI-примерка.',
+  },
+  metadataBase: new URL('https://atelier-ai.ru'),
 }
 
 export const viewport: Viewport = {
