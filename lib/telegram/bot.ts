@@ -114,16 +114,42 @@ bot.on("text", async (ctx) => {
 bot.command("subscribe", async (ctx) => {
   await ctx.reply(
     "💎 FitBot Premium\n\n" +
-    "• 100 примерок в месяц — 499₽\n" +
-    "• Безлимит — 999₽\n\n" +
-    "Оплата через ЮKassa. Напиши /pay_499 или /pay_999",
+    "📦 Пакеты (одноразово):\n" +
+    "  /pay_starter — 125 примерок за 199₽\n" +
+    "  /pay_basic — 500 примерок за 499₽\n" +
+    "  /pay_standard — 1500 примерок за 999₽ ⭐\n\n" +
+    "🔄 Подписки (каждый месяц):\n" +
+    "  /sub_light — 625 примерок/мес за 499₽\n" +
+    "  /sub_pro — 2000 примерок/мес за 999₽\n" +
+    "  /sub_unlimited — 3750 примерок/мес за 2499₽\n\n" +
+    "Оплата через ЮKassa. После оплаты кредиты зачислятся автоматически.",
   )
 })
 
-bot.command("pay_499", async (ctx) => {
-  await ctx.reply("💰 Ссылка на оплату появится здесь после интеграции ЮKassa.")
-})
+async function createPayLink(ctx: any, planId: string, isSubscription: boolean) {
+  const chatId = ctx.chat.id
+  try {
+    const res = await fetch(`${config.auth.webhook_url}/api/fitbot/pay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.auth.fitbotSecret}`,
+      },
+      body: JSON.stringify({ chatId: String(chatId), planId, isSubscription }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || "Ошибка")
+    await ctx.reply(`💳 Ссылка на оплату:\n${data.url}`)
+  } catch {
+    await ctx.reply("❌ Не удалось создать ссылку на оплату. Попробуй позже.")
+  }
+}
 
-bot.command("pay_999", async (ctx) => {
-  await ctx.reply("💰 Ссылка на оплату появится здесь после интеграции ЮKassa.")
-})
+bot.command("pay_starter", async (ctx) => createPayLink(ctx, "starter", false))
+bot.command("pay_basic", async (ctx) => createPayLink(ctx, "basic", false))
+bot.command("pay_standard", async (ctx) => createPayLink(ctx, "standard", false))
+bot.command("pay_pro", async (ctx) => createPayLink(ctx, "pro", false))
+
+bot.command("sub_light", async (ctx) => createPayLink(ctx, "light", true))
+bot.command("sub_pro", async (ctx) => createPayLink(ctx, "pro", true))
+bot.command("sub_unlimited", async (ctx) => createPayLink(ctx, "unlimited", true))

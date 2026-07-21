@@ -29,7 +29,7 @@ export const config = {
     },
   },
   ai: {
-    apiKey: process.env.MUAPIAPP_API_KEY || process.env.NEXT_PUBLIC_MUAPI_KEY,
+    apiKey: process.env.MUAPIAPP_API_KEY || "",
     generationCost: 25,
     freeTierCredits: 75,
   },

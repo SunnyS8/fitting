@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+const SECRET = process.env.MUAPI_WEBHOOK_SECRET || process.env.FITBOT_SECRET || ""
+
 export async function POST(req: Request) {
   try {
+    const headerSecret = req.headers.get("x-webhook-secret")
+    if (SECRET && headerSecret !== SECRET) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const data = await req.json()
     const requestId = data.id || data.request_id
 
@@ -32,7 +39,7 @@ export async function POST(req: Request) {
           ? outputs[0]
           : typeof data.output === "string"
             ? data.output
-            : data.output?.urls?.get
+            : data.output?.urls?.[0] || data.output?.url || ""
 
       if (imageUrl) {
         await prisma.tryOn.update({

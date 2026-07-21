@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server"
 import { config } from "@/lib/config"
 
-const FALLBACK_TRYONS = [
-  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800",
-  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=800",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800",
-]
+function extractImageUrl(pollJson: Record<string, unknown>): string {
+  const outputs = (pollJson.outputs || []) as string[]
+  if (outputs.length > 0) return outputs[0]
+  if (typeof pollJson.output === "string") return pollJson.output
+  const out = pollJson.output as Record<string, unknown> | undefined
+  if (out?.urls && Array.isArray(out.urls) && (out.urls as string[]).length > 0) return (out.urls as string[])[0]
+  if (out?.url && typeof out.url === "string") return out.url
+  return ""
+}
 
 export async function POST(req: Request) {
   const auth = req.headers.get("authorization")
@@ -23,8 +27,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Нет фото" }, { status: 400 })
     }
 
-    const prompt = garment
-      ? `Realistic virtual try-on. The person should wear: ${garment}. Keep face, pose, proportions and background unchanged. Make clothing fit naturally with realistic folds, lighting and shadows.`
+    const sanitized = (garment || "").replace(/[^\w\sа-яА-Я\-.,!?"']/g, "").slice(0, 200)
+    const prompt = sanitized
+      ? `Realistic virtual try-on. The person should wear: """${sanitized}""". Keep face, pose, proportions and background unchanged. Make clothing fit naturally with realistic folds, lighting and shadows.`
       : "Realistic virtual try-on. Dress the person in the provided clothing image. Keep face, pose, proportions and background unchanged."
 
     const apiKey = config.ai.apiKey
@@ -65,8 +70,7 @@ export async function POST(req: Request) {
                   const pollJson = await pollRes.json()
                   const state = pollJson.status || pollJson.state
                   if (state === "completed" || state === "succeeded") {
-                    const outputs = pollJson.outputs || []
-                    resultImage = outputs[0] || (typeof pollJson.output === "string" ? pollJson.output : pollJson.output?.urls?.get)
+                    resultImage = extractImageUrl(pollJson as Record<string, unknown>)
                     break
                   }
                   if (state === "failed") break
@@ -83,7 +87,7 @@ export async function POST(req: Request) {
     }
 
     if (!resultImage) {
-      resultImage = FALLBACK_TRYONS[Math.floor(Math.random() * FALLBACK_TRYONS.length)]
+      return NextResponse.json({ error: "AI не смог обработать изображение" }, { status: 502 })
     }
 
     return NextResponse.json({ image: resultImage, status: "completed" })

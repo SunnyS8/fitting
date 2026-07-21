@@ -62,20 +62,32 @@ export const BillingService = {
     const { prisma } = await import("../prisma")
     const meta = (payment.metadata || {}) as Record<string, string>
     const type = meta.type
+    const userId = meta.userId
+    if (!userId) return { success: false }
+
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: {
+        id: userId,
+        name: userId.startsWith("tg_") ? `Telegram ${userId.slice(3, 8)}` : userId,
+        email: `${userId}@fitbot.local`,
+        credits: 0,
+      },
+    })
 
     if (type === "credits") {
-      const userId = meta.userId
       const credits = parseInt(meta.credits || "0", 10)
-      if (userId && credits > 0) {
+      if (credits > 0) {
         await UserService.addCredits(userId, credits)
         return { success: true, userId, credits }
       }
     }
 
     if (type === "subscription") {
-      const { userId, plan } = meta
+      const { plan } = meta
       const credits = parseInt(meta.credits || "0", 10)
-      if (userId && plan && credits > 0) {
+      if (plan && credits > 0) {
         await UserService.addCredits(userId, credits)
         await prisma.user.update({
           where: { id: userId },

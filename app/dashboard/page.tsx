@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSession, signIn } from "next-auth/react"
 import Link from "next/link"
 import { Loader2, Plus, Trash2, Eye, Download, Images, Sparkles, X } from "lucide-react"
@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [selectedTryon, setSelectedTryon] = useState<TryOn | null>(null)
+  const processingRef = useRef("")
 
   useEffect(() => {
     if (!session?.user) return
@@ -41,15 +42,17 @@ export default function DashboardPage() {
   }, [session])
 
   useEffect(() => {
-    const hasProcessing = tryons.some((t) => t.status === "processing")
-    if (!hasProcessing) return
+    const ids = tryons.filter((t) => t.status === "processing").map((t) => t.id).sort().join(",")
+    if (ids === processingRef.current) return
+    processingRef.current = ids
+
+    if (!ids) return
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch("/api/tryons")
         if (res.ok) {
-          const data = await res.json()
-          setTryons(data)
+          setTryons(await res.json())
         }
       } catch { /* ignore */ }
     }, 4000)

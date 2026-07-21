@@ -7,12 +7,6 @@ import { config } from "@/lib/config"
 
 export const maxDuration = 60
 
-const FALLBACK_TRYONS = [
-  "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800",
-  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=800",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800",
-]
-
 type Body = {
   personImage?: string
   garment?: string
@@ -39,8 +33,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Недостаточно кредитов. Пополните баланс." }, { status: 402 })
     }
 
-    const prompt = garment
-      ? `Realistic virtual try-on. The person should wear: ${garment}. Keep face, pose, proportions and background unchanged. Make clothing fit naturally with realistic folds, lighting and shadows.`
+    const sanitized = (garment || "").replace(/[^\w\sа-яА-Я\-.,!?"']/g, "").slice(0, 200)
+    const prompt = sanitized
+      ? `Realistic virtual try-on. The person should wear: """${sanitized}""". Keep face, pose, proportions and background unchanged. Make clothing fit naturally with realistic folds, lighting and shadows.`
       : "Realistic virtual try-on. Dress the person in the provided clothing image. Keep face, pose, proportions and background unchanged."
 
     const clothesImage = garmentImage || personImage
@@ -84,8 +79,7 @@ export async function POST(req: Request) {
     }
 
     if (!resultImage && status !== "completed") {
-      resultImage = FALLBACK_TRYONS[Math.floor(Math.random() * FALLBACK_TRYONS.length)]
-      status = "completed"
+      status = "failed"
     }
 
     const tryon = await prisma.tryOn.create({
