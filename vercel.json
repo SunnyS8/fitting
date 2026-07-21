@@ -1,4 +1,7 @@
 {
+  "installCommand": "npm install",
+  "buildCommand": "prisma migrate deploy && prisma generate && next build",
+  "framework": "nextjs",
   "functions": {
     "app/api/try-on/route.ts": { "maxDuration": 60 },
     "app/api/fitbot/try-on/route.ts": { "maxDuration": 60 },
